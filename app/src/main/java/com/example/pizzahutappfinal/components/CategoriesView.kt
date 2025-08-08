@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size // Asegúrate de que esta importación exista
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,8 +22,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale // ¡Importante! Añadir esta importación
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.pizzahutappfinal.GlobalNavigation
 import com.example.pizzahutappfinal.model.CategoryModel
@@ -47,9 +48,8 @@ fun CategoriesView(modifier: Modifier = Modifier) {
                     }
                     categoryList.value = resultList
                 } else {
-                    // Manejar error aquí
-                }
             }
+        }
     }
 
     LazyColumn (
@@ -59,17 +59,15 @@ fun CategoriesView(modifier: Modifier = Modifier) {
             start = 18.dp,
             end = 18.dp,
             top = 20.dp,
-            bottom = 80.dp // 👈 espacio para que el último ítem no quede debajo del BottomBar
+            bottom = 80.dp
         ),
         modifier = modifier
-            .fillMaxWidth()// Añadido padding vertical también
+            .fillMaxWidth()
     ) {
         items(categoryList.value) { item ->
-            // Ajustar el tamaño de la tarjeta para que tenga un aspecto más de "rectángulo"
-            // y permita que la imagen y el texto se distribuyan mejor.
             CategoItem(category = item, modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp) // Aumenta la altura de la tarjeta
+                .height(200.dp)
             )
         }
     }
@@ -79,31 +77,30 @@ fun CategoriesView(modifier: Modifier = Modifier) {
 fun CategoItem(category : CategoryModel, modifier: Modifier = Modifier) {
     Card (
         modifier = modifier.clickable {
-            GlobalNavigation.navController.navigate("category-products/${category.id}") // Usando string templates
+            GlobalNavigation.navController.navigate("category-products/${category.id}")
         },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(7.dp),
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface) // Asumo que quieres el fondo blanco/claro
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ){
         Column (
             horizontalAlignment = Alignment.CenterHorizontally,
-            // Centra verticalmente el contenido dentro de la columna, pero sin usar fillMaxSize aquí.
-            // En su lugar, el Spacer se encargará de empujar el texto hacia abajo.
-            modifier = Modifier.fillMaxSize() // Fill the card's available space
+            modifier = Modifier.fillMaxSize().padding(10.dp)
         ){
-            // La imagen debe ocupar el espacio restante que le permita su contentScale,
-            // sin tener un size fijo, para que se expanda
             AsyncImage(
                 model = category.imageUrl,
                 contentDescription = category.nombre,
-                contentScale = ContentScale.Crop, // ¡CLAVE! Esto recorta la imagen para llenar los límites
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .fillMaxWidth() // La imagen intentará llenar todo el ancho de la columna
-                    .weight(1f) // La imagen tomará todo el espacio vertical disponible (menos el texto y el Spacer)
+                    .fillMaxWidth()
+                    .weight(1f)
             )
-            Spacer(modifier = Modifier.height(8.dp)) // Espacio entre imagen y texto
-            Text(text = category.nombre,
-                modifier = Modifier.padding(bottom = 8.dp) // Añadir padding inferior al texto
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = category.nombre,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+                modifier = Modifier.padding(4.dp)
             )
         }
     }

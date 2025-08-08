@@ -45,7 +45,7 @@ fun CategoriePage(modifier: Modifier = Modifier) {
                 text = "BIENVENIDO A NUESTRO MENÚ",
                 fontFamily = BrixtonLeadFontFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 34.sp,
+                fontSize = 37.sp,
             )
         }
 
