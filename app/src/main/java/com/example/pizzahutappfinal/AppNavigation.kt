@@ -2,9 +2,11 @@ package com.example.pizzahutappfinal
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.pizzahutappfinal.pages.CategoryProductsPage
 import com.example.pizzahutappfinal.screen.AuthScreen
 import com.example.pizzahutappfinal.screen.HomeScreen
 import com.example.pizzahutappfinal.screen.LoginScreen
@@ -16,6 +18,7 @@ import com.google.firebase.auth.auth
 fun AppNavigation(modifier: Modifier = Modifier) {
 
     val navController = rememberNavController()
+    GlobalNavigation.navController = navController
 
     NavHost(navController = navController, startDestination = "auth") {
         val isLoggedIn = Firebase.auth.currentUser!=null
@@ -36,5 +39,14 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         composable("home") {
             HomeScreen(modifier,navController)
         }
+
+        composable("category-products/{categoryId}") {
+            var categoryId = it.arguments?.getString("categoryId")
+            CategoryProductsPage(modifier, categoryId?:"")
+        }
     }
+}
+
+object GlobalNavigation {
+    lateinit var navController : NavController
 }
