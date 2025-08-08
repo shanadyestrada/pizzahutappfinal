@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "437787496740",
+    "project_id": "pizzahutappfinal-54467",
+    "storage_bucket": "pizzahutappfinal-54467.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:437787496740:android:da795255c651a2774ca3b1",
+        "android_client_info": {
+          "package_name": "com.example.pizzahutappfinal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4B8o3S__h6aCBqJgqklkwPV8KGoMtESI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
