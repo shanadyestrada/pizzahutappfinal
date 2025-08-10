@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.messaging)
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.0.5")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

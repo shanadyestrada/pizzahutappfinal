@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pizzahutappfinal.AppUtil.calculateTotal
+import com.example.pizzahutappfinal.GlobalNavigation
 import com.example.pizzahutappfinal.R
 import com.example.pizzahutappfinal.components.CartItemView
 import com.example.pizzahutappfinal.model.CartItemModel
@@ -156,7 +157,7 @@ fun CartPage(modifier: Modifier = Modifier) {
 
                 // --- 3. Tu Button, ahora dentro de la nueva Column ---
                 Button(
-                    onClick = { /* ... */ },
+                    onClick = { GlobalNavigation.navController.navigate("checkout") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(

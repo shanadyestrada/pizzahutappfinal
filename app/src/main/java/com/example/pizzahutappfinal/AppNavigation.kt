@@ -3,10 +3,14 @@ package com.example.pizzahutappfinal
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.pizzahutappfinal.pages.CategoryProductsPage
+import com.example.pizzahutappfinal.pages.CheckoutPage
+import com.example.pizzahutappfinal.pages.InvoicePage
 import com.example.pizzahutappfinal.pages.ProductDetailsPage
 import com.example.pizzahutappfinal.screen.AuthScreen
 import com.example.pizzahutappfinal.screen.HomeScreen
@@ -50,6 +54,20 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             composable("product-details/{productId}") {
                 var productId = it.arguments?.getString("productId")
                 ProductDetailsPage(modifier, productId?:"")
+            }
+
+            composable("checkout") {
+                CheckoutPage(navController = navController)
+            }
+
+            composable(
+                "invoicePage/{orderId}",
+                arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getString("orderId")
+                if (orderId != null) {
+                    InvoicePage(navController = navController, orderId = orderId)
+                }
             }
         }
 

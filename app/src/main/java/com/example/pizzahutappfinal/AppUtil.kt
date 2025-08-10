@@ -2,14 +2,18 @@ package com.example.pizzahutappfinal
 
 import android.content.Context
 import android.widget.Toast
+import androidx.navigation.NavController
 import com.example.pizzahutappfinal.model.CartItemModel
+import com.example.pizzahutappfinal.model.OrderModel
 import com.example.pizzahutappfinal.model.ProductModel
 import com.example.pizzahutappfinal.model.UserModel
 import com.example.pizzahutappfinal.model.getTamano
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import java.util.UUID
 
 object AppUtil {
 
@@ -191,5 +195,70 @@ object AppUtil {
                     }
                 }
         }
+    }
+
+    fun saveOrder(context: Context, navController: NavController) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId == null) {
+            showToast(context, "Error: Usuario no autenticado.")
+            return
+        }
+
+        val firestore = FirebaseFirestore.getInstance()
+        val userDocRef = firestore.collection("usuarios").document(userId)
+
+        userDocRef.get().addOnSuccessListener { userSnapshot ->
+            val userModel = userSnapshot.toObject(UserModel::class.java)
+
+            if (userModel != null && userModel.cartItems.isNotEmpty()) {
+                // 1. Crear el modelo de la orden
+                val orderId = "ORDEN-${UUID.randomUUID().toString().take(8).uppercase()}"
+                val newOrder = OrderModel(
+                    orderId = orderId,
+                    userId = userId,
+                    cartItems = userModel.cartItems,
+                    status = "ORDENADO"
+                )
+
+                // 2. Guardar la orden en la colección 'orders'
+                firestore.collection("orders").document(orderId).set(newOrder)
+                    .addOnSuccessListener {
+                        // 3. Vaciar el carrito del usuario después de guardar la orden
+                        userDocRef.update("cartItems", emptyList<CartItemModel>())
+                            .addOnSuccessListener {
+                                showToast(context, "Pedido realizado con éxito. ID: $orderId")
+                                // 🚀 Navegar a la página de la boleta
+                                navController.navigate("invoicePage/$orderId")
+                            }
+                            .addOnFailureListener {
+                                showToast(context, "Pedido guardado, pero no se pudo limpiar el carrito.")
+                            }
+                    }
+                    .addOnFailureListener {
+                        showToast(context, "Error al guardar el pedido: ${it.message}")
+                    }
+            } else {
+                showToast(context, "El carrito está vacío.")
+            }
+        }.addOnFailureListener {
+            showToast(context, "Error al obtener los datos del usuario.")
+        }
+    }
+
+    fun getCartItems(onResult: (List<CartItemModel>) -> Unit) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId == null) {
+            onResult(emptyList())
+            return
+        }
+
+        FirebaseFirestore.getInstance().collection("usuarios").document(userId).get()
+            .addOnSuccessListener { documentSnapshot ->
+                val userModel = documentSnapshot.toObject(UserModel::class.java)
+                onResult(userModel?.cartItems ?: emptyList())
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
     }
 }
