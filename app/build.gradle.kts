@@ -54,7 +54,6 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.messaging)
-    implementation(libs.firebase.auth)
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
