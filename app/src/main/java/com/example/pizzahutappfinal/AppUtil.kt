@@ -2,7 +2,9 @@ package com.example.pizzahutappfinal
 
 import android.content.Context
 import android.widget.Toast
+import com.example.pizzahutappfinal.model.CartItemModel
 import com.example.pizzahutappfinal.model.ProductModel
+import com.example.pizzahutappfinal.model.UserModel
 import com.example.pizzahutappfinal.model.getTamano
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -15,33 +17,60 @@ object AppUtil {
         Toast.makeText(context,mesagge,Toast.LENGTH_LONG).show()
     }
 
-    fun addToCart(context: Context, productId: String, variationKey: String? = null) {
+    fun addToCart(
+        context: Context,
+        productId: String,
+        variationKey: String? = null,
+        adicionales: List<String> = emptyList()
+    ) {
         val userDoc = Firebase.firestore.collection("usuarios")
             .document(FirebaseAuth.getInstance().currentUser?.uid!!)
 
-        userDoc.get().addOnCompleteListener {
-            if (it.isSuccessful) {
-                val currentCart = it.result.get("cartItems") as? Map<String, Long> ?: emptyMap()
+        userDoc.get().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val userModel = task.result.toObject(UserModel::class.java)
 
-                val cartKey = if (variationKey != null) {
-                    "${productId}_$variationKey"
-                } else {
-                    productId
-                }
+                // Asegúrate de que userModel no sea nulo
+                userModel?.let {
+                    val currentCart = it.cartItems.toMutableList()
 
-                val currentQuantity = currentCart[cartKey] ?: 0
-                val updatedQuantity = currentQuantity + 1
+                    // Ordenar los adicionales para una comparación consistente
+                    val sortedAdicionales = adicionales.sorted()
 
-                val updatedCart = mapOf("cartItems.$cartKey" to updatedQuantity)
-
-                userDoc.update(updatedCart)
-                    .addOnCompleteListener {
-                        if (it.isSuccessful) {
-                            showToast(context, "Producto añadido al carrito")
-                        } else {
-                            showToast(context, "No se pudo agregar al carrito")
-                        }
+                    // Buscar si el ítem ya existe en el carrito
+                    val existingItemIndex = currentCart.indexOfFirst { cartItem ->
+                        cartItem.productoId == productId &&
+                                cartItem.variaciones == variationKey &&
+                                cartItem.adicionales.sorted() == sortedAdicionales
                     }
+
+                    if (existingItemIndex != -1) {
+                        // Si el ítem ya existe, incrementa la cantidad
+                        val existingItem = currentCart[existingItemIndex]
+                        currentCart[existingItemIndex] = existingItem.copy(cantidad = existingItem.cantidad + 1)
+                    } else {
+                        // Si no, añade un nuevo ítem
+                        currentCart.add(
+                            CartItemModel(
+                                productoId = productId,
+                                variaciones = variationKey,
+                                cantidad = 1,
+                                adicionales = sortedAdicionales
+                            )
+                        )
+                    }
+
+                    val updatedUserMap = mapOf("cartItems" to currentCart)
+
+                    userDoc.update(updatedUserMap)
+                        .addOnCompleteListener { updateTask ->
+                            if (updateTask.isSuccessful) {
+                                showToast(context, "Producto añadido al carrito")
+                            } else {
+                                showToast(context, "No se pudo agregar al carrito")
+                            }
+                        }
+                } ?: showToast(context, "Error: UserModel nulo")
             } else {
                 showToast(context, "Error al obtener el carrito del usuario")
             }
@@ -52,48 +81,54 @@ object AppUtil {
         context: Context,
         productId: String,
         variationKey: String? = null,
-        removeAll: Boolean = false
+        removeAll: Boolean = false,
+        adicionales: List<String> = emptyList()
     ) {
         val userDoc = Firebase.firestore.collection("usuarios")
             .document(FirebaseAuth.getInstance().currentUser?.uid!!)
 
-        userDoc.get().addOnCompleteListener {
-            if (it.isSuccessful) {
-                val currentCart = it.result.get("cartItems") as? Map<String, Long> ?: emptyMap()
+        userDoc.get().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val userModel = task.result.toObject(UserModel::class.java)
+                userModel?.let {
+                    val currentCart = it.cartItems.toMutableList()
+                    val sortedAdicionales = adicionales.sorted()
 
-                // 1. Determinar la clave del producto en el carrito, incluyendo la variación
-                val cartKey = if (variationKey != null) {
-                    "${productId}_$variationKey"
-                } else {
-                    productId
-                }
-
-                // 2. Obtener la cantidad actual y la actualizamos
-                val currentQuantity = currentCart[cartKey] ?: 0
-                val updatedQuantity = currentQuantity - 1
-
-                // 3. Crear el mapa de actualización con la clave correcta
-                val updatedCart =
-                    if (updatedQuantity <= 0 || removeAll) {
-                        // Usa FieldValue.delete() para remover el par clave-valor si la cantidad llega a cero o si se pide remover todo.
-                        mapOf("cartItems.$cartKey" to FieldValue.delete())
-                    } else {
-                        mapOf("cartItems.$cartKey" to updatedQuantity)
+                    val existingItemIndex = currentCart.indexOfFirst { cartItem ->
+                        cartItem.productoId == productId &&
+                                cartItem.variaciones == variationKey &&
+                                cartItem.adicionales.sorted() == sortedAdicionales
                     }
 
-                userDoc.update(updatedCart)
-                    .addOnCompleteListener {
-                        if (it.isSuccessful) {
-                            showToast(context, "Producto removido del carrito")
+                    if (existingItemIndex != -1) {
+                        val existingItem = currentCart[existingItemIndex]
+
+                        if (removeAll || existingItem.cantidad <= 1) {
+                            currentCart.removeAt(existingItemIndex)
                         } else {
-                            showToast(context, "No se pudo remover del carrito")
+                            val nuevaCantidad = existingItem.cantidad - 1
+                            currentCart[existingItemIndex] = existingItem.copy(cantidad = nuevaCantidad)
                         }
+
+                        userDoc.update("cartItems", currentCart)
+                            .addOnCompleteListener { updateTask ->
+                                if (updateTask.isSuccessful) {
+                                    showToast(context, "Producto removido del carrito")
+                                } else {
+                                    showToast(context, "No se pudo remover del carrito")
+                                }
+                            }
+                    } else {
+                        showToast(context, "El producto no está en el carrito")
                     }
+                } ?: showToast(context, "Error: UserModel nulo")
+            } else {
+                showToast(context, "Error al obtener el carrito del usuario")
             }
         }
     }
 
-    fun calculateTotal(cartItems: Map<String, Long>, onResult: (Double) -> Unit) {
+    fun calculateTotal(cartItems: List<CartItemModel>, onResult: (Double) -> Unit) {
         if (cartItems.isEmpty()) {
             onResult(0.0)
             return
@@ -103,10 +138,11 @@ object AppUtil {
         val totalItems = cartItems.size
         var itemsProcessed = 0
 
-        cartItems.forEach { (cartKey, qty) ->
-            val parts = cartKey.split("_")
-            val productId = parts[0]
-            val variationKey = if (parts.size > 1) parts.subList(1, parts.size).joinToString("_") else null
+        cartItems.forEach { cartItem ->
+            val productId = cartItem.productoId
+            val variationKey = cartItem.variaciones
+            val adicionales = cartItem.adicionales
+            val qty = cartItem.cantidad
 
             Firebase.firestore.collection("data").document("stock")
                 .collection("productos").document(productId).get()
@@ -114,21 +150,28 @@ object AppUtil {
                     val productModel = doc.toObject(ProductModel::class.java)
 
                     val price: Double
-                    if (productModel?.categoria == "pizzas" && variationKey != null) {
+                    if (productModel?.categoria?.lowercase() == "pizzas" && variationKey != null) {
                         val (size, crust) = variationKey.split("_")
                         val tamanoModel = productModel.variaciones?.getTamano(size)
 
                         val priceString = tamanoModel?.let {
-                            when (crust) {
-                                "Artesanal" -> it.Artesanal
-                                "CheeseBites" -> it.CheeseBites
-                                "Delgada" -> it.Delgada
-                                "HutCheese" -> it.HutCheese
-                                "Pan" -> it.Pan
+                            when (crust.lowercase()) {
+                                "artesanal" -> it.Artesanal
+                                "cheesebites" -> it.CheeseBites
+                                "delgada" -> it.Delgada
+                                "hutcheese" -> it.HutCheese
+                                "pan" -> it.Pan
                                 else -> null
                             }
                         }
-                        price = priceString?.toDoubleOrNull() ?: 0.0
+                        val basePrice = priceString?.toDoubleOrNull() ?: 0.0
+
+                        val additionalPrice = productModel.adicionales
+                            .filterKeys { adicionales.contains(it) }
+                            .values
+                            .sumOf { it.toDoubleOrNull() ?: 0.0 }// Usa sumOf en lugar de sum()
+
+                        price = basePrice + additionalPrice
                     } else {
                         val priceString = productModel?.precio
                         price = priceString?.toDoubleOrNull() ?: 0.0

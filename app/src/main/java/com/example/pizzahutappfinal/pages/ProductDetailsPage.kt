@@ -26,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,6 +61,7 @@ import com.example.pizzahutappfinal.R
 import com.example.pizzahutappfinal.GlobalNavigation
 import com.example.pizzahutappfinal.model.ProductModel
 import com.example.pizzahutappfinal.model.TamanoModel
+import com.example.pizzahutappfinal.model.getTamano
 import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
 import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
 import com.google.firebase.Firebase
@@ -75,7 +77,9 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
     // Nuevo estado para controlar la visibilidad del menú desplegable.
     var isDropdownExpanded by remember { mutableStateOf(false) }
     var selectedVariation by remember { mutableStateOf<Pair<String, String>?>(null) }
-    var selectedPrice by remember { mutableStateOf("") }
+    var selectedPrice by remember { mutableStateOf(0.0) }
+
+    var selectedAdicionales by remember { mutableStateOf(emptySet<String>()) }
 
     LaunchedEffect(productId) {
         val snapshot = Firebase.firestore
@@ -92,10 +96,36 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
                 val defaultCrust = "Artesanal"
                 val defaultPrice = it.variaciones.grande?.Artesanal
                 selectedVariation = Pair(defaultSize, defaultCrust)
-                selectedPrice = (defaultPrice ?: "").toString()
+                selectedPrice = defaultPrice?.toDoubleOrNull() ?: 0.0
             } else {
-                selectedPrice = it.precio
+                selectedPrice = it.precio.toDoubleOrNull() ?: 0.0
             }
+        }
+    }
+
+    // Usar LaunchedEffect para recalcular el precio cuando cambien las selecciones
+    LaunchedEffect(selectedVariation, selectedAdicionales) {
+        if (product.categoria.lowercase() == "pizzas" && selectedVariation != null) {
+            val (size, crust) = selectedVariation!!
+            val tamanoModel = product.variaciones?.getTamano(size)
+
+            val basePrice = tamanoModel?.let {
+                when (crust.lowercase()) {
+                    "artesanal" -> it.Artesanal
+                    "cheesebites" -> it.CheeseBites
+                    "delgada" -> it.Delgada
+                    "hutcheese" -> it.HutCheese
+                    "pan" -> it.Pan
+                    else -> null
+                }
+            }?.toDoubleOrNull() ?: 0.0
+
+            val additionalPrice = product.adicionales
+                .filterKeys { selectedAdicionales.contains(it) }
+                .values
+                .sumOf {  it.toDoubleOrNull() ?: 0.0 }
+
+            selectedPrice = basePrice + additionalPrice
         }
     }
 
@@ -110,7 +140,7 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
                     } else {
                         null
                     }
-                    AppUtil.addToCart(context, productId, variationKey)
+                    AppUtil.addToCart(context, productId, variationKey, selectedAdicionales.toList())
                 },
                 shape = RoundedCornerShape(5.dp),
                 modifier = Modifier
@@ -351,23 +381,71 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
                             product.variaciones?.familiar?.let { tamano ->
                                 addCrustMenuItems("familiar", tamano, onSelect = { size, crust, price ->
                                     selectedVariation = Pair(size, crust)
-                                    selectedPrice = price
+                                    selectedPrice = price.toDoubleOrNull() ?: 0.0
                                     isDropdownExpanded = false
                                 })
                             }
                             product.variaciones?.grande?.let { tamano ->
                                 addCrustMenuItems("grande", tamano, onSelect = { size, crust, price ->
                                     selectedVariation = Pair(size, crust)
-                                    selectedPrice = price
+                                    selectedPrice = price.toDoubleOrNull() ?: 0.0
                                     isDropdownExpanded = false
                                 })
                             }
                             product.variaciones?.mediana?.let { tamano ->
                                 addCrustMenuItems("mediana", tamano, onSelect = { size, crust, price ->
                                     selectedVariation = Pair(size, crust)
-                                    selectedPrice = price
+                                    selectedPrice = price.toDoubleOrNull() ?: 0.0
                                     isDropdownExpanded = false
                                 })
+                            }
+                        }
+                    }
+
+                    // 🆕 Nueva sección para los adicionales
+                    if (product.adicionales.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "ADICIONALES",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            product.adicionales.forEach { (adicional, precio) ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            selectedAdicionales = if (selectedAdicionales.contains(adicional)) {
+                                                selectedAdicionales - adicional
+                                            } else {
+                                                selectedAdicionales + adicional
+                                            }
+                                        }
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = selectedAdicionales.contains(adicional),
+                                        onCheckedChange = { isChecked ->
+                                            selectedAdicionales = if (isChecked) {
+                                                selectedAdicionales + adicional
+                                            } else {
+                                                selectedAdicionales - adicional
+                                            }
+                                        }
+                                    )
+                                    Text(
+                                        text = adicional.replaceFirstChar { it.uppercase() },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Text(
+                                        // 🛠️ CAMBIO: Convertimos el precio de String a Double de forma segura
+                                        text = "+ S/. %.2f".format(precio.toDoubleOrNull() ?: 0.0),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                             }
                         }
                     }

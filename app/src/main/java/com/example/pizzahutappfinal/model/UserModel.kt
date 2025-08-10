@@ -7,5 +7,13 @@ data class UserModel (
         val telefono : String = "",
         val email : String = "",
         val userId : String = "",
-        val cartItems : Map<String, Long> = emptyMap()
+        val cartItems: List<CartItemModel> = emptyList()
     )
+
+data class CartItemModel(
+        val productoId: String = "",
+        val variaciones: String? = null,
+        val cantidad: Long = 0,
+        val adicionales: List<String> = emptyList()
+)
+

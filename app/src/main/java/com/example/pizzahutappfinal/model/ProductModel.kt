@@ -7,7 +7,8 @@ data class ProductModel(
     val image: String = "",
     val categoria: String = "",
     val precio: String = "",
-    val variaciones: VariacionesModel? = null
+    val variaciones: VariacionesModel? = null,
+    val adicionales: Map<String, String> = emptyMap()
 )
 
 data class VariacionesModel(

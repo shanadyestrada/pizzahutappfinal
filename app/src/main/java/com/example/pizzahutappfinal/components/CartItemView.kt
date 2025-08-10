@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import coil.compose.AsyncImage
 import com.example.pizzahutappfinal.AppUtil
+import com.example.pizzahutappfinal.model.CartItemModel
 import com.example.pizzahutappfinal.model.ProductModel
 import com.example.pizzahutappfinal.model.getTamano
 import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
@@ -48,13 +49,13 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 
 @Composable
-fun CartItemView( modifier: Modifier = Modifier, productIdWithVariation: String, qty: Long) {
+fun CartItemView( modifier: Modifier = Modifier, cartItem: CartItemModel) {
     var product by remember { mutableStateOf(ProductModel()) }
     val context = LocalContext.current
-
-    val parts = productIdWithVariation.split("_")
-    val productId = parts[0]
-    val variationKey = if (parts.size > 1) parts.subList(1, parts.size).joinToString("_") else null
+    val productId = cartItem.productoId
+    val variationKey = cartItem.variaciones
+    val qty = cartItem.cantidad
+    val adicionales = cartItem.adicionales
 
     val (size, crust) = if (variationKey != null) {
         val variationParts = variationKey.split("_")
@@ -156,6 +157,32 @@ fun CartItemView( modifier: Modifier = Modifier, productIdWithVariation: String,
                 }
             }
 
+            // 🆕 Nueva Sección de Adicionales
+            if (adicionales.isNotEmpty()) {
+                adicionales.forEach { adicional ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = adicional.replaceFirstChar { it.uppercase() },
+                            fontSize = 13.sp,
+                            color = Color.Gray,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        val additionalPrice = product.adicionales[adicional]?.toDoubleOrNull() ?: 0.0
+                        Text(
+                            text = "+ S/. %.2f".format(additionalPrice),
+                            fontSize = 13.sp,
+                            color = Color.Gray,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Línea 2: Eliminar y cantidad
@@ -168,7 +195,7 @@ fun CartItemView( modifier: Modifier = Modifier, productIdWithVariation: String,
                     modifier = Modifier
                         .size(28.dp)
                         .clickable {
-                            AppUtil.removeFromCart(context, productId, removeAll = true)
+                            AppUtil.removeFromCart(context, productId, adicionales = cartItem.adicionales,  removeAll = true)
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -187,7 +214,7 @@ fun CartItemView( modifier: Modifier = Modifier, productIdWithVariation: String,
                         .size(28.dp)
                         .background(Color(0xFFFFCDD2), CircleShape) // fondo rojo claro
                         .clickable {
-                            AppUtil.removeFromCart(context, productId, variationKey)
+                            AppUtil.removeFromCart(context, productId, variationKey, adicionales = cartItem.adicionales)
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -216,7 +243,7 @@ fun CartItemView( modifier: Modifier = Modifier, productIdWithVariation: String,
                         .size(28.dp)
                         .background(Color(0xFFC8E6C9), CircleShape) // fondo verde claro
                         .clickable {
-                            AppUtil.addToCart(context, productId, variationKey)
+                            AppUtil.addToCart(context, productId, variationKey, adicionales = cartItem.adicionales)
                         },
                     contentAlignment = Alignment.Center
                 ) {

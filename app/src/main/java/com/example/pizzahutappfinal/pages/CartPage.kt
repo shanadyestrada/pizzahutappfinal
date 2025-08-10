@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.example.pizzahutappfinal.AppUtil.calculateTotal
 import com.example.pizzahutappfinal.R
 import com.example.pizzahutappfinal.components.CartItemView
+import com.example.pizzahutappfinal.model.CartItemModel
 import com.example.pizzahutappfinal.model.UserModel
 import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
 import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
@@ -104,10 +105,9 @@ fun CartPage(modifier: Modifier = Modifier) {
                     bottom = 5.dp
                 ),
             ) {
-                items(userModel.value.cartItems.entries.toList(), key = { it.key }) { entry ->
-                    val productIdWithVariation = entry.key
-                    val qty = entry.value
-                    CartItemView(productIdWithVariation = productIdWithVariation, qty = qty)
+                items(userModel.value.cartItems, key = { it.productoId + (it.variaciones ?: "") + it.adicionales.joinToString() }) { cartItem ->
+                    // Ahora pasas el objeto CartItemModel completo a tu vista
+                    CartItemView(cartItem = cartItem)
                 }
             }
         } else {
