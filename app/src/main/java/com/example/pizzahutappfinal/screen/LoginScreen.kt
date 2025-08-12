@@ -114,6 +114,18 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             label = { Text(text = "Contraseña") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val imagePainter = if (passwordVisible)
+                    painterResource(id= R.drawable.ic_visibility)
+                else
+                    painterResource(id = R.drawable.ic_visibility_off)
+
+                val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+
+                IconButton(onClick = {passwordVisible = !passwordVisible}) {
+                    Icon(painter = imagePainter, contentDescription = description, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
 
 
         )

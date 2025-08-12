@@ -1,12 +1,31 @@
 package com.example.pizzahutappfinal.model
 
+import com.google.firebase.firestore.PropertyName
+
 data class UserModel (
-        val nombre : String = "",
-        val apellidos : String = "",
+        @get:PropertyName("nombre")
+        @set:PropertyName("nombre")
+        var nombre : String = "",
+
+        @get:PropertyName("apellidos") // Si en Firestore es 'apellidos'
+        @set:PropertyName("apellidos")
+        var apellidos : String = "",
+
         val fechaNacimiento: String = "",
-        val telefono : String = "",
-        val email : String = "",
-        val userId : String = "",
+
+        @get:PropertyName("telefono")
+        @set:PropertyName("telefono")
+        var telefono : String = "",
+
+        @get:PropertyName("email")
+        @set:PropertyName("email")
+        var email : String = "",
+
+        @get:PropertyName("userId")
+        @set:PropertyName("userId")
+        var userId : String = "",
+
+        @JvmField
         val cartItems: List<CartItemModel> = emptyList()
     )
 

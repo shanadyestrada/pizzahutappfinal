@@ -8,14 +8,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.pizzahutappfinal.pages.MyAccountPage
 import com.example.pizzahutappfinal.pages.CategoryProductsPage
 import com.example.pizzahutappfinal.pages.CheckoutPage
+import com.example.pizzahutappfinal.pages.EditProfilePage
 import com.example.pizzahutappfinal.pages.InvoicePage
 import com.example.pizzahutappfinal.pages.ProductDetailsPage
 import com.example.pizzahutappfinal.screen.AuthScreen
 import com.example.pizzahutappfinal.screen.HomeScreen
 import com.example.pizzahutappfinal.screen.LoginScreen
 import com.example.pizzahutappfinal.screen.SignUpScreen
+import com.example.pizzahutappfinal.pages.ProfilePage
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -68,6 +71,16 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 if (orderId != null) {
                     InvoicePage(navController = navController, orderId = orderId)
                 }
+            }
+
+            composable("account"){
+                MyAccountPage(modifier)
+            }
+            composable("profile_details"){
+                ProfilePage(modifier)
+            }
+            composable("edit_profile"){
+                EditProfilePage(modifier, navController)
             }
         }
 

@@ -56,6 +56,9 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
     implementation ("androidx.compose.runtime:runtime-livedata:1.0.5")
+    implementation(libs.androidx.foundation)
+    implementation(libs.material3)
+    implementation(libs.androidx.foundation.layout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -65,5 +68,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation ("io.coil-kt:coil-compose:2.2.0")
     implementation("com.tbuonomo:dotsindicator:5.1.0")
+    implementation("com.google.maps.android:maps-compose:4.4.1")
 
 }

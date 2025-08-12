@@ -2,6 +2,7 @@ package com.example.pizzahutappfinal.screen
 
 import android.app.DatePickerDialog
 import android.widget.DatePicker
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,15 +17,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -44,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -99,9 +105,12 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
         datePicker.maxDate = System.currentTimeMillis()
     }
 
+    val scrollState = rememberScrollState()
+
     Column (modifier = Modifier
         .fillMaxSize()
-        .padding(32.dp),
+        .padding(32.dp)
+        .verticalScroll(scrollState),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
@@ -132,7 +141,11 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
             // Nombres
             OutlinedTextField(
                 value = nombre,
-                onValueChange = { nombre = it },
+                onValueChange = { newValue ->
+                    if (newValue.all { it.isLetter() || it.isWhitespace() } || newValue.isBlank()) {
+                        nombre = newValue
+                    }
+                },
                 label = {
                     Text(
                         "Nombres *",
@@ -152,7 +165,11 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
             // Apellidos
             OutlinedTextField(
                 value = apellidos,
-                onValueChange = { apellidos = it },
+                onValueChange = { newValue ->
+                    if (newValue.all { it.isLetter() || it.isWhitespace() } || newValue.isBlank()) {
+                        apellidos = newValue
+                    }
+                },
                 label = { Text("Apellidos *",
                     style = TextStyle(
                         color = Color.Gray,
@@ -164,6 +181,8 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                 shape = RoundedCornerShape(7.dp),
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Fecha de Nacimiento
             Box(
@@ -260,9 +279,24 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                 )
             },
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val imagePainter = if(passwordVisible)
+                        painterResource(id = R.drawable.ic_visibility)
+                    else painterResource(id = R.drawable.ic_visibility_off)
+                    val description =
+                        if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+                    IconButton(onClick ={ passwordVisible = !passwordVisible}) {
+                        Icon(
+                            painter = imagePainter,
+                            contentDescription = description,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
             // Términos y condiciones
             Row(
                 modifier = Modifier
@@ -295,28 +329,37 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                 )
             }
 
-            Button (onClick = {
-                isLoading = true
-                authViewModel.signup(email = email,
-                    nombre = nombre,
-                    apellidos = apellidos,
-                    password = password,
-                    fechaNacimiento = fechaNacimiento,
-                    telefono = telefono) {sucess,errorMesagge ->
-                    if (sucess) {
-                        isLoading = false
-                        navController.navigate("home") {
-                            popUpTo("auth") {
-                                inclusive = true
-                            }
-                        }
-                    } else {
-                        isLoading = false
-                        AppUtil.showToast(context,errorMesagge?: "Algo salió mal..")
+            Button (
+                onClick = {
+                    // Validar que no haya campos vacíos
+                    if (nombre.isBlank() || apellidos.isBlank() || fechaNacimiento.isBlank() ||
+                        telefono.isBlank() || email.isBlank() || password.isBlank()) {
+                        Toast.makeText(context, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show()
+                        return@Button
                     }
-                }
-            },
-                enabled = !isLoading && acceptsTerms,
+
+                    isLoading = true
+                    authViewModel.signup(email = email,
+                        nombre = nombre,
+                        apellidos = apellidos,
+                        password = password,
+                        fechaNacimiento = fechaNacimiento,
+                        telefono = telefono) {sucess,errorMesagge ->
+                        if (sucess) {
+                            isLoading = false
+                            navController.navigate("home") {
+                                popUpTo("auth") {
+                                    inclusive = true
+                                }
+                            }
+                        } else {
+                            isLoading = false
+                            AppUtil.showToast(context,errorMesagge?: "Algo salió mal..")
+                        }
+                    }
+                },
+                enabled = !isLoading && acceptsTerms && nombre.isNotBlank() && apellidos.isNotBlank() &&
+                        fechaNacimiento.isNotBlank() && telefono.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
                     .height(60.dp)
             ) {
