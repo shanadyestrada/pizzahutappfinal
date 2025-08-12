@@ -106,17 +106,16 @@ fun CartItemView( modifier: Modifier = Modifier, cartItem: CartItemModel) {
                     overflow = TextOverflow.Ellipsis
                 )
 
-                val price = if (product.categoria == "pizzas" && variationKey != null) {
+                val priceString = if (product.categoria.lowercase() == "pizzas" && variationKey != null) {
                     val (size, crust) = variationKey.split("_")
                     val tamanoModel = product.variaciones?.getTamano(size)
-
                     tamanoModel?.let {
-                        when (crust) {
-                            "Artesanal" -> it.Artesanal
-                            "CheeseBites" -> it.CheeseBites
-                            "Delgada" -> it.Delgada
-                            "HutCheese" -> it.HutCheese
-                            "Pan" -> it.Pan
+                        when (crust.lowercase()) {
+                            "artesanal" -> it.Artesanal
+                            "cheesebites" -> it.CheeseBites
+                            "delgada" -> it.Delgada
+                            "hutcheese" -> it.HutCheese
+                            "pan" -> it.Pan
                             else -> null
                         }
                     }
@@ -124,8 +123,17 @@ fun CartItemView( modifier: Modifier = Modifier, cartItem: CartItemModel) {
                     product.precio
                 }
 
+                val basePrice = priceString?.toDoubleOrNull() ?: 0.0
+
+                val additionalPrice = product.adicionales
+                    .filterKeys { adicionales.contains(it) }
+                    .values
+                    .sumOf { it.toDoubleOrNull() ?: 0.0 }
+
+                val itemTotalPrice = (basePrice + additionalPrice) * qty
+
                 Text(
-                    text = "S/. ${price ?: product.precio}",
+                    text = "S/. %.2f".format(itemTotalPrice),
                     fontWeight = FontWeight.Bold,
                     fontFamily = SharpSansFontFamily,
                     fontSize = 16.sp
@@ -195,7 +203,7 @@ fun CartItemView( modifier: Modifier = Modifier, cartItem: CartItemModel) {
                     modifier = Modifier
                         .size(28.dp)
                         .clickable {
-                            AppUtil.removeFromCart(context, productId, adicionales = cartItem.adicionales,  removeAll = true)
+                            AppUtil.removeFromCart(context, productId, variationKey, adicionales = cartItem.adicionales,  removeAll = true)
                         },
                     contentAlignment = Alignment.Center
                 ) {

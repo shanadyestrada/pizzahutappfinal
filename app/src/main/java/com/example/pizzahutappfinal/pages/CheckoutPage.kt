@@ -71,6 +71,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                  checkoutViewModel: CheckoutViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val primaryColor = Color(0xFFA90A24)
     val totalPrice = checkoutViewModel.totalPrice.observeAsState(initial = 0.0).value
     val userProfile = checkoutViewModel.userProfile.observeAsState().value
     val direcciones = checkoutViewModel.direcciones.observeAsState(initial = emptyList()).value
@@ -108,7 +109,6 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
     var isBoletaElectronicaChecked by remember { mutableStateOf(false) }
     var isFacturaChecked by remember { mutableStateOf(false) }
 
-
     val selectedComprobante by remember {
         derivedStateOf {
             when {
@@ -121,12 +121,14 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
 
     var acceptsTerms by remember { mutableStateOf(false) }
 
+
     Column (modifier = Modifier.fillMaxWidth())  {
+
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding() // ajusta automáticamente
+                .statusBarsPadding()
                 .background(Color(0xFFAF0014))
                 .padding(horizontal = 16.dp, vertical = 14.dp), // controla el espacio interno
             verticalAlignment = Alignment.CenterVertically
@@ -136,7 +138,6 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                 color = Color.White
             )
         }
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
@@ -204,7 +205,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                             Text(
                                 text = nombre,
                                 fontFamily = SharpSansFontFamily,
-                                fontSize = 14.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 1,
                                 color = Color(0xFF858383)
@@ -221,7 +222,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                             Text(
                                 text = apellidos,
                                 fontFamily = SharpSansFontFamily,
-                                fontSize = 14.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 1,
                                 color = Color(0xFF858383)
@@ -246,7 +247,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                             Text(
                                 text = telefono,
                                 fontFamily = SharpSansFontFamily,
-                                fontSize = 14.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 1,
                                 color = Color(0xFF858383)
@@ -263,7 +264,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                             Text(
                                 text = correo,
                                 fontFamily = SharpSansFontFamily,
-                                fontSize = 14.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 1,
                                 color = Color(0xFF858383)
@@ -331,7 +332,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                             .fillMaxWidth()
                             .border(
                                 width = 1.dp, color = Color.Gray, shape = RoundedCornerShape(8.dp)
-                    )
+                            )
                             .padding(vertical = 8.dp)
                             .selectableGroup()
                     ) {
@@ -416,16 +417,19 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                         )
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "omo describe en este aplicativo y en Pizza Hut",
+                    Text(text = "Estoy de acuerdo con las Condiciones de uso y Política de Privacidad y entiendo que mi información " +
+                            "se usará como describe en este aplicativo y en Pizza Hut",
                         style = TextStyle(
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 12.sp,
                             fontFamily = SharpSansFontFamily,
-                            lineHeight = 14.sp
+                            lineHeight = 15.sp
                         ),
                         modifier = Modifier.weight(1f)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Sección de Boleta Electrónica
                 Row(
@@ -444,10 +448,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                 ) {
                     Checkbox(
                         checked = isBoletaElectronicaChecked,
-                        onCheckedChange = {
-                            isBoletaElectronicaChecked = it
-                            if (it) isFacturaChecked = false
-                        },
+                        onCheckedChange = null,
                         colors = CheckboxDefaults.colors(
                             checkmarkColor = Color.White,
                             uncheckedColor = Color(0xFFC7011A),
@@ -458,20 +459,21 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "¿Desea acumular puntos Bonnus y Boleta Electrónica?",
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             fontFamily = SharpSansFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             lineHeight = 14.sp
                         )
                         Text(
                             text = "Se usará la información anteriormente registrado en su cuenta",
-                            fontSize = 10.sp,
+                            fontSize = 11.sp,
                             fontFamily = SharpSansFontFamily,
                             fontWeight = FontWeight.Medium,
-                            lineHeight = 12.sp
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Sección de Factura
                 Row(
@@ -490,10 +492,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                 ) {
                     Checkbox(
                         checked = isFacturaChecked,
-                        onCheckedChange = {
-                            isFacturaChecked = it
-                            if (it) isBoletaElectronicaChecked = false
-                        },
+                        onCheckedChange = null,
                         colors = CheckboxDefaults.colors(
                             checkmarkColor = Color.White,
                             uncheckedColor = Color(0xFFC7011A),
@@ -503,74 +502,113 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Necesito Factura",
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         fontFamily = SharpSansFontFamily,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.weight(1f),
-                        lineHeight = 14.sp
+                        modifier = Modifier.weight(1f)
                     )
+                }
+
+                if (isFacturaChecked) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        FacturaFields()
+                    }
                 }
 
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = {
-                    if (!acceptsTerms) {
-                        showToast(context, "Por favor, acepte los términos y condiciones.")
-                        return@Button
-                    }
-
-                    if (selectedMetodoPago == null) {
-                        showToast(context, "Por favor, seleccione un método de pago.")
-                        return@Button
-                    }
-
-                    when (selectedDeliveryOption) {
-                        DeliveryOption.RECOJO_EN_TIENDA -> {
-                            if (selectedLocal != null) {
-                                AppUtil.saveOrder(
-                                    context,
-                                    navController,
-                                    AppUtil.OpcionDeEntrega.Recojo(selectedLocal!!),
-                                    selectedMetodoPago!!,
-                                    selectedComprobante
-                                )
-                            } else {
-                                showToast(context, "Por favor, seleccione un local de recojo.")
-                            }
-                        }
-                        DeliveryOption.DELIVERY -> {
-                            if (shouldShowAddressForm && nuevaDireccionCalle.isNotEmpty() && nuevaDireccionNombre.isNotEmpty()) {
-                                val newAddress = DireccionModel(nombre = nuevaDireccionNombre, direccion = nuevaDireccionCalle)
-                                // ✅ La función para guardar nueva dirección también debe recibir el método de pago
-                                AppUtil.saveOrderWithNewAddress(
-                                    context,
-                                    navController,
-                                    newAddress,
-                                    selectedMetodoPago!!,
-                                    selectedComprobante
-                                )
-                            } else if (selectedDireccion != null) {
-                                AppUtil.saveOrder(
-                                    context,
-                                    navController,
-                                    AppUtil.OpcionDeEntrega.Delivery(selectedDireccion!!),
-                                    selectedMetodoPago!!,
-                                    selectedComprobante
-                                )
-                            } else {
-                                showToast(context, "Por favor, seleccione una dirección o complete los campos.")
-                            }
-                        }
-                    }
-                },
+            // Usa esta sección justo antes de tu Button
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Text("Pagar")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Total:",
+                        fontFamily = SharpSansFontFamily,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 20.sp
+                    )
+                    Text(
+                        text = "S/ ${"%.2f".format(totalPrice)}",
+                        fontFamily = SharpSansFontFamily,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 20.sp,
+                        color = Color(0xFFC7011A)
+                    )
+                }
+                Button(
+                    onClick = {
+                        if (!acceptsTerms) {
+                            showToast(context, "Por favor, acepte los términos y condiciones.")
+                            return@Button
+                        }
+
+                        if (selectedMetodoPago == null) {
+                            showToast(context, "Por favor, seleccione un método de pago.")
+                            return@Button
+                        }
+
+                        when (selectedDeliveryOption) {
+                            DeliveryOption.RECOJO_EN_TIENDA -> {
+                                if (selectedLocal != null) {
+                                    AppUtil.saveOrder(
+                                        context,
+                                        navController,
+                                        AppUtil.OpcionDeEntrega.Recojo(selectedLocal!!),
+                                        selectedMetodoPago!!,
+                                        selectedComprobante
+                                    )
+                                } else {
+                                    showToast(context, "Por favor, seleccione un local de recojo.")
+                                }
+                            }
+                            DeliveryOption.DELIVERY -> {
+                                if (shouldShowAddressForm && nuevaDireccionCalle.isNotEmpty() && nuevaDireccionNombre.isNotEmpty()) {
+                                    val newAddress = DireccionModel(nombre = nuevaDireccionNombre, direccion = nuevaDireccionCalle)
+                                    AppUtil.saveOrderWithNewAddress(
+                                        context,
+                                        navController,
+                                        newAddress,
+                                        selectedMetodoPago!!,
+                                        selectedComprobante
+                                    )
+                                } else if (selectedDireccion != null) {
+                                    AppUtil.saveOrder(
+                                        context,
+                                        navController,
+                                        AppUtil.OpcionDeEntrega.Delivery(selectedDireccion!!),
+                                        selectedMetodoPago!!,
+                                        selectedComprobante
+                                    )
+                                } else {
+                                    showToast(context, "Por favor, seleccione una dirección o complete los campos.")
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(5.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor, disabledContainerColor = Color.LightGray)
+
+                ) {
+                    Text(text = "PAGAR",
+                        modifier = Modifier.padding(5.dp),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = SharpSansFontFamily,
+                        letterSpacing = 2.sp)
+
+                }
             }
         }
 
@@ -579,7 +617,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
 
 @Composable
 fun RecojoEnTiendaUI(locales: List<LocalModel>, isLocalesLoading: Boolean, selectedLocal: LocalModel?,
-                    onLocalSelected: (LocalModel) -> Unit
+                     onLocalSelected: (LocalModel) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -948,7 +986,7 @@ fun CardFields() {
     var cvv by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.padding(12.dp)
-        ) {
+    ) {
         OutlinedTextField(
             value = titular,
             onValueChange = { titular = it },
@@ -1006,5 +1044,53 @@ fun CardFields() {
                 )
             )
         }
+    }
+}
+
+@Composable
+fun FacturaFields() {
+    var ruc by remember { mutableStateOf("") }
+    var razonSocial by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.LightGray.copy(alpha = 0.3f), shape = RoundedCornerShape(8.dp))
+            .padding(16.dp)
+    ) {
+        OutlinedTextField(
+            value = ruc,
+            onValueChange = { ruc = it },
+            label = {
+                Text(
+                    text = "RUC",
+                    fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
+                    fontSize = 12.sp, color = Color.Gray
+                )
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            )
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = razonSocial,
+            onValueChange = { razonSocial = it },
+            label = {
+                Text(
+                    text = "Razón Social",
+                    fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
+                    fontSize = 12.sp, color = Color.Gray
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            )
+        )
     }
 }

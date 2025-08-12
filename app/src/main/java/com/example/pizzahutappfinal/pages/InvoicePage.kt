@@ -1,96 +1,342 @@
 package com.example.pizzahutappfinal.pages
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pizzahutappfinal.R
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.pizzahutappfinal.components.InvoiceItemView
+import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
+import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
+
 import com.example.pizzahutappfinal.components.InvoiceViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
-fun InvoicePage(
-    orderId: String,
-    navController: NavController,
-    modifier: Modifier = Modifier,
-    invoiceViewModel: InvoiceViewModel = viewModel(
-        factory = InvoiceViewModel.InvoiceViewModelFactory(orderId)
+fun InvoicePage(orderId: String, navController: NavController, modifier: Modifier = Modifier,
+                invoiceViewModel: InvoiceViewModel = viewModel(factory = InvoiceViewModel.InvoiceViewModelFactory(orderId)
     )
 ) {
     val order = invoiceViewModel.order.observeAsState().value
+    val userProfile = invoiceViewModel.userProfile.observeAsState().value
     val isLoading = invoiceViewModel.isLoading.observeAsState(initial = true).value
+    val orderTotal by invoiceViewModel.orderTotal.observeAsState(initial = 0.0)
 
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator()
-        } else if (order == null) {
-            Text("No se pudo cargar la boleta.", fontSize = 18.sp)
+    var showPermissionDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    Column (modifier = Modifier.fillMaxWidth())  {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .background(Color(0xFFAF0014))
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Mi Header",
+                color = Color.White
+            )
+        }
+
+        if (isLoading || order == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         } else {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                // Sombrero/logo
+                Image(
+                    painter = painterResource(id = R.drawable.vector),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(61.dp)
+                )
+
+                // Título
+                Text(
+                    text = "PEDIDO REALIZADO CON ÉXITO",
+                    fontFamily = BrixtonLeadFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 38.sp,
+                )
+
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = Color(0xFFAF0014),
+                                fontWeight = FontWeight.Bold
+                            )
+                        ) {
+                            append("¡Gracias por comprar en Pizza Hut! ")
+                        }
+                        withStyle(
+                            style = SpanStyle(
+                                color = Color.Black,
+                                fontWeight = FontWeight.Medium
+                            )
+                        ) {
+                            append("Te mostramos un resumen de tu orden.")
+                        }
+                    },
+                    fontFamily = SharpSansFontFamily,
+                    fontSize = 16.sp,
+                    lineHeight = 20.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
             ) {
-                Text(
-                    text = "Boleta de Pedido",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(width = 1.dp, color = Color.Gray, shape = RoundedCornerShape(8.dp))
+                        .padding(16.dp)
+                ) {
+                    InvoiceAnnotatedItem(label = "Número de Boleta: ", value = order.orderId)
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    // Fecha y Hora
+                    order.timestamp?.let { date ->
+                        InvoiceAnnotatedItem(
+                            label = "Fecha y Hora: ",
+                            value = SimpleDateFormat(
+                                "dd/MM/yyyy HH:mm",
+                                Locale.getDefault()
+                            ).format(date)
+                        )
+                    }
 
-                // Sección de datos del pedido
-                Text("ID del Pedido: ${order.orderId}", fontSize = 16.sp)
-                Text("Estado: ${order.status}", fontSize = 16.sp)
-                // Usar ?.let para formatear la fecha solo si no es nula
-                order.timestamp?.let { date ->
-                    Text("Fecha: $date", fontSize = 16.sp)
-                }
+                    // Comprobante
+                    order.tipoComprobante?.let {
+                        InvoiceAnnotatedItem(label = "Comprobante: ", value = it.nombre)
+                    }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    // Tipo de Servicio
+                    val serviceType =
+                        if (order.deliveryDireccion != null) "Delivery" else "Recojo en Tienda"
+                    InvoiceAnnotatedItem(label = "Tipo de Servicio: ", value = serviceType)
 
-                Divider()
+                    // Dirección o Local
+                    order.deliveryDireccion?.let {
+                        InvoiceAnnotatedItem(
+                            label = "Dirección de Envío: ",
+                            value = "${it.direccion}"
+                        )
+                    }
+                    order.localDeRecojo?.let {
+                        InvoiceAnnotatedItem(label = "Local de Recojo: ", value = it.nombre)
+                    }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    // Método de Pago
+                    order.metodoPago?.let {
+                        InvoiceAnnotatedItem(label = "Método de Pago: ", value = it.nombre)
+                    }
 
-                // Lista de productos del pedido
-                Text("Productos:", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(order.cartItems) { item ->
-                        Text(" - ${item.productoId} x ${item.cantidad}", fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Divider(color = Color.Gray, thickness = 1.dp)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Detalles del Pedido (productos)
+                    Text(
+                        text = "DETALLES DEL PEDIDO",
+                        fontFamily = SharpSansFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color(0xFFAF0014)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    order.cartItems.forEach { cartItem ->
+                        InvoiceItemView(cartItem = cartItem)
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "TOTAL",
+                            fontFamily = SharpSansFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color(0xFFAF0014)
+                        )
+                        Text(
+                            text = "S/ %.2f".format(orderTotal),
+                            fontFamily = SharpSansFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color(0xFFAF0014)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Divider(color = Color.Gray, thickness = 1.dp)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val phoneNumber = "080012345"
+
+                        val annotatedString = buildAnnotatedString {
+                            append("Si tienes dudas, contáctanos al: ")
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFAF0014),
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ) {
+                                append("0800-12345")
+                            }
+                        }
+
+                        Text(
+                            text = annotatedString,
+                            fontSize = 14.sp,
+                            modifier = Modifier.clickable {
+                                // ✅ Al hacer clic, mostramos el diálogo
+                                showPermissionDialog = true
+                            }
+                        )
+
+                        // ✅ Cuadro de diálogo de confirmación
+                        if (showPermissionDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showPermissionDialog = false },
+                                title = {
+                                    Text(
+                                        text = "Abrir el teclado de llamadas",
+                                        fontFamily = SharpSansFontFamily,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                },
+                                text = {
+                                    Text(
+                                        text = "¿Quieres abrir la aplicación de teléfono para llamar a 0800-12345?",
+                                        fontFamily = SharpSansFontFamily
+                                    )
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            showPermissionDialog = false
+                                            try {
+                                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                                    data = Uri.parse("tel:$phoneNumber")
+                                                }
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "No se pudo realizar la llamada.",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(
+                                                0xFFAF0014
+                                            )
+                                        )
+                                    ) {
+                                        Text(
+                                            "Aceptar",
+                                            fontFamily = SharpSansFontFamily,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                },
+                                dismissButton = {
+                                    Button(
+                                        onClick = { showPermissionDialog = false },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                                    ) {
+                                        Text(
+                                            "Cancelar",
+                                            fontFamily = SharpSansFontFamily,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            )
+                        }
+
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Divider()
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = {
-                        navController.navigate("home") {
-                            // Limpia la pila de navegación para que el usuario no pueda volver a la boleta con el botón 'atrás'
-                            popUpTo("home") { inclusive = true }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Volver al inicio", fontSize = 18.sp)
-                }
-
-                // Lógica del total
-                // Aquí podrías llamar a una función para calcular el total si no lo tienes guardado
             }
+
         }
+
+    }
+}
+
+@Composable
+fun InvoiceAnnotatedItem(
+    label: String,
+    value: String,
+    labelColor: Color = Color(0xFFAF0014),
+    valueColor: Color = Color.Black
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = buildAnnotatedString {
+                withStyle(style = SpanStyle(color = valueColor, fontWeight = FontWeight.SemiBold)) {
+                    append(label)
+                }
+                withStyle(style = SpanStyle(color = valueColor, fontWeight = FontWeight.Medium)) {
+                    append(value)
+                }
+            },
+            fontFamily = SharpSansFontFamily,
+            fontSize = 14.sp
+        )
     }
 }

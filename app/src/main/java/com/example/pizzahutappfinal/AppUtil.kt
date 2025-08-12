@@ -183,7 +183,7 @@ object AppUtil {
                         val additionalPrice = productModel.adicionales
                             .filterKeys { adicionales.contains(it) }
                             .values
-                            .sumOf { it.toDoubleOrNull() ?: 0.0 }// Usa sumOf en lugar de sum()
+                            .sumOf { it.toDoubleOrNull() ?: 0.0 }
 
                         price = basePrice + additionalPrice
                     } else {
@@ -206,6 +206,7 @@ object AppUtil {
                 }
         }
     }
+
 
     fun saveOrderWithNewAddress(context: Context, navController: NavController,
                                 newAddress: DireccionModel, metodoPago: MetodoPagoModel, selectedComprobante: TipoComprobanteModel?) {

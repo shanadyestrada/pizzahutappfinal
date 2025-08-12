@@ -33,3 +33,14 @@ fun VariacionesModel.getTamano(size: String): TamanoModel? {
         else -> null
     }
 }
+
+fun TamanoModel.getPrecioCorteza(corteza: String): String? {
+    return when(corteza) {
+        "artesanal" -> this.Artesanal
+        "cheesebites" -> this.CheeseBites
+        "delgada" -> this.Delgada
+        "hutcheese" -> this.HutCheese
+        "pan" -> this.Pan
+        else -> null
+    }
+}

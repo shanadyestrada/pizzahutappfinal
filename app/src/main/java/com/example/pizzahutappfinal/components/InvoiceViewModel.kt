@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.pizzahutappfinal.model.OrderModel
+import com.example.pizzahutappfinal.model.UserModel
+import com.example.pizzahutappfinal.AppUtil
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 
@@ -13,8 +15,14 @@ class InvoiceViewModel(private val orderId: String) : ViewModel() {
     private val _order = MutableLiveData<OrderModel?>()
     val order: LiveData<OrderModel?> = _order
 
+    private val _userProfile = MutableLiveData<UserModel?>()
+    val userProfile: LiveData<UserModel?> = _userProfile
+
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _orderTotal = MutableLiveData<Double>()
+    val orderTotal: LiveData<Double> = _orderTotal
 
     init {
         loadOrder()
@@ -26,10 +34,36 @@ class InvoiceViewModel(private val orderId: String) : ViewModel() {
             .addOnSuccessListener { documentSnapshot ->
                 val orderModel = documentSnapshot.toObject(OrderModel::class.java)
                 _order.value = orderModel
-                _isLoading.value = false
+                if (orderModel != null) {
+                    // ✅ Usamos tu función calculateTotal y pasamos un callback para actualizar el LiveData
+                    AppUtil.calculateTotal(cartItems = orderModel.cartItems) { total ->
+                        _orderTotal.value = total
+                    }
+
+                    if (orderModel.userId.isNotEmpty()) {
+                        loadUserProfile(orderModel.userId)
+                    } else {
+                        _isLoading.value = false
+                    }
+                } else {
+                    _isLoading.value = false
+                }
             }
             .addOnFailureListener {
                 _order.value = null
+                _isLoading.value = false
+            }
+    }
+
+    private fun loadUserProfile(userId: String) {
+        FirebaseFirestore.getInstance().collection("users").document(userId).get()
+            .addOnSuccessListener { documentSnapshot ->
+                val userModel = documentSnapshot.toObject(UserModel::class.java)
+                _userProfile.value = userModel
+                _isLoading.value = false
+            }
+            .addOnFailureListener {
+                _userProfile.value = null
                 _isLoading.value = false
             }
     }

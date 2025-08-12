@@ -60,7 +60,6 @@ fun CartPage(modifier: Modifier = Modifier) {
                     val result = it.toObject(UserModel::class.java)
                     if (result != null) {
                         userModel.value = result
-                        // Llamar a la función para calcular el total
                         calculateTotal(userModel.value.cartItems) { total ->
                             cartTotal.value = total
                         }

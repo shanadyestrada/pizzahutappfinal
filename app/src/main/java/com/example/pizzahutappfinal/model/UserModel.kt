@@ -25,7 +25,6 @@ data class UserModel (
         @set:PropertyName("userId")
         var userId : String = "",
 
-        @JvmField
         val cartItems: List<CartItemModel> = emptyList()
     )
 
