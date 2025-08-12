@@ -4,8 +4,12 @@ import android.content.Context
 import android.widget.Toast
 import androidx.navigation.NavController
 import com.example.pizzahutappfinal.model.CartItemModel
+import com.example.pizzahutappfinal.model.DireccionModel
+import com.example.pizzahutappfinal.model.LocalModel
+import com.example.pizzahutappfinal.model.MetodoPagoModel
 import com.example.pizzahutappfinal.model.OrderModel
 import com.example.pizzahutappfinal.model.ProductModel
+import com.example.pizzahutappfinal.model.TipoComprobanteModel
 import com.example.pizzahutappfinal.model.UserModel
 import com.example.pizzahutappfinal.model.getTamano
 import com.google.firebase.Firebase
@@ -20,6 +24,12 @@ object AppUtil {
     fun showToast(context : Context, mesagge : String) {
         Toast.makeText(context,mesagge,Toast.LENGTH_LONG).show()
     }
+
+    sealed class OpcionDeEntrega {
+        data class Recojo(val local: LocalModel) : OpcionDeEntrega()
+        data class Delivery(val direccion: DireccionModel) : OpcionDeEntrega()
+    }
+
 
     fun addToCart(
         context: Context,
@@ -197,7 +207,31 @@ object AppUtil {
         }
     }
 
-    fun saveOrder(context: Context, navController: NavController) {
+    fun saveOrderWithNewAddress(context: Context, navController: NavController,
+                                newAddress: DireccionModel, metodoPago: MetodoPagoModel, selectedComprobante: TipoComprobanteModel?) {
+        // 1. Guardar la nueva dirección en la subcolección del usuario
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId == null) {
+            showToast(context, "Error: Usuario no autenticado.")
+            return
+        }
+
+        val firestore = FirebaseFirestore.getInstance()
+        val userDocRef = firestore.collection("usuarios").document(userId)
+
+        userDocRef.collection("direcciones").add(newAddress)
+            .addOnSuccessListener {
+                // 2. Después de guardar la dirección, guardar el pedido de delivery
+                saveOrder(context, navController, OpcionDeEntrega.Delivery(newAddress), metodoPago, selectedComprobante)
+            }
+            .addOnFailureListener {
+                showToast(context, "Error al guardar la nueva dirección: ${it.message}")
+            }
+    }
+
+
+    fun saveOrder(context: Context, navController: NavController, opcionDeEntrega: OpcionDeEntrega,
+                  metodoPago: MetodoPagoModel, selectedComprobante: TipoComprobanteModel?) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId == null) {
             showToast(context, "Error: Usuario no autenticado.")
@@ -211,23 +245,27 @@ object AppUtil {
             val userModel = userSnapshot.toObject(UserModel::class.java)
 
             if (userModel != null && userModel.cartItems.isNotEmpty()) {
-                // 1. Crear el modelo de la orden
                 val orderId = "ORDEN-${UUID.randomUUID().toString().take(8).uppercase()}"
+                val tipoComprobanteFinal = selectedComprobante ?: TipoComprobanteModel(
+                    nombre = "Boleta"
+                )
+
                 val newOrder = OrderModel(
                     orderId = orderId,
                     userId = userId,
                     cartItems = userModel.cartItems,
-                    status = "ORDENADO"
+                    status = "ORDENADO",
+                    localDeRecojo = (opcionDeEntrega as? OpcionDeEntrega.Recojo)?.local,
+                    deliveryDireccion = (opcionDeEntrega as? OpcionDeEntrega.Delivery)?.direccion,
+                    metodoPago = metodoPago,
+                    tipoComprobante = tipoComprobanteFinal
                 )
 
-                // 2. Guardar la orden en la colección 'orders'
                 firestore.collection("orders").document(orderId).set(newOrder)
                     .addOnSuccessListener {
-                        // 3. Vaciar el carrito del usuario después de guardar la orden
                         userDocRef.update("cartItems", emptyList<CartItemModel>())
                             .addOnSuccessListener {
                                 showToast(context, "Pedido realizado con éxito. ID: $orderId")
-                                // 🚀 Navegar a la página de la boleta
                                 navController.navigate("invoicePage/$orderId")
                             }
                             .addOnFailureListener {

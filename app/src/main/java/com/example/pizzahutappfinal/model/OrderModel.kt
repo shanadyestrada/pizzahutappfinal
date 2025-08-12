@@ -8,6 +8,10 @@ data class OrderModel(
     var userId: String = "",
     var status: String = "ORDENADO",
     var cartItems: List<CartItemModel> = emptyList(),
+    var localDeRecojo: LocalModel? = null,
+    var deliveryDireccion: DireccionModel? = null,
+    val metodoPago: MetodoPagoModel? = null,
+    val tipoComprobante: TipoComprobanteModel? = null,
     @ServerTimestamp
     var timestamp: Date? = null
 )
