@@ -121,20 +121,21 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
             // Contenido
             ContentScreen(
                 modifier = Modifier.fillMaxSize(),
-                selectedIndex = selectedIndex
+                selectedIndex = selectedIndex,
+                navController = navController
             )
         }
     }
 }
 
 @Composable
-fun ContentScreen(modifier: Modifier = Modifier, selectedIndex : Int) {
+fun ContentScreen(modifier: Modifier = Modifier, selectedIndex : Int, navController: NavController) {
     when (selectedIndex) {
         0 -> HomePage(modifier)
         1 -> CategoriePage(modifier)
         2 -> LocalPage(modifier)
         3 -> CartPage(modifier)
-        4 -> MyAccountPage(modifier)
+        4 -> MyAccountPage(modifier, navController)
     }
 }
 

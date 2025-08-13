@@ -598,7 +598,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                     modifier = Modifier
                         .fillMaxWidth(),
                     shape = RoundedCornerShape(5.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor, disabledContainerColor = Color.LightGray)
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
 
                 ) {
                     Text(text = "PAGAR",

@@ -246,36 +246,44 @@ object AppUtil {
             val userModel = userSnapshot.toObject(UserModel::class.java)
 
             if (userModel != null && userModel.cartItems.isNotEmpty()) {
-                val orderId = "ORDEN-${UUID.randomUUID().toString().take(8).uppercase()}"
-                val tipoComprobanteFinal = selectedComprobante ?: TipoComprobanteModel(
-                    nombre = "Boleta"
-                )
 
-                val newOrder = OrderModel(
-                    orderId = orderId,
-                    userId = userId,
-                    cartItems = userModel.cartItems,
-                    status = "ORDENADO",
-                    localDeRecojo = (opcionDeEntrega as? OpcionDeEntrega.Recojo)?.local,
-                    deliveryDireccion = (opcionDeEntrega as? OpcionDeEntrega.Delivery)?.direccion,
-                    metodoPago = metodoPago,
-                    tipoComprobante = tipoComprobanteFinal
-                )
+                calculateTotal(cartItems = userModel.cartItems) { calculatedTotal ->
 
-                firestore.collection("orders").document(orderId).set(newOrder)
-                    .addOnSuccessListener {
-                        userDocRef.update("cartItems", emptyList<CartItemModel>())
-                            .addOnSuccessListener {
-                                showToast(context, "Pedido realizado con éxito. ID: $orderId")
-                                navController.navigate("invoicePage/$orderId")
-                            }
-                            .addOnFailureListener {
-                                showToast(context, "Pedido guardado, pero no se pudo limpiar el carrito.")
-                            }
-                    }
-                    .addOnFailureListener {
-                        showToast(context, "Error al guardar el pedido: ${it.message}")
-                    }
+                    val orderId = "ORDEN-${UUID.randomUUID().toString().take(8).uppercase()}"
+                    val tipoComprobanteFinal = selectedComprobante ?: TipoComprobanteModel(
+                        nombre = "Boleta"
+                    )
+
+                    val newOrder = OrderModel(
+                        orderId = orderId,
+                        userId = userId,
+                        cartItems = userModel.cartItems,
+                        status = "ORDENADO",
+                        localDeRecojo = (opcionDeEntrega as? OpcionDeEntrega.Recojo)?.local,
+                        deliveryDireccion = (opcionDeEntrega as? OpcionDeEntrega.Delivery)?.direccion,
+                        metodoPago = metodoPago,
+                        tipoComprobante = tipoComprobanteFinal,
+                        orderTotal = calculatedTotal
+                    )
+
+                    firestore.collection("orders").document(orderId).set(newOrder)
+                        .addOnSuccessListener {
+                            userDocRef.update("cartItems", emptyList<CartItemModel>())
+                                .addOnSuccessListener {
+                                    showToast(context, "Pedido realizado con éxito. ID: $orderId")
+                                    navController.navigate("invoicePage/$orderId")
+                                }
+                                .addOnFailureListener {
+                                    showToast(
+                                        context,
+                                        "Pedido guardado, pero no se pudo limpiar el carrito."
+                                    )
+                                }
+                        }
+                        .addOnFailureListener {
+                            showToast(context, "Error al guardar el pedido: ${it.message}")
+                        }
+                }
             } else {
                 showToast(context, "El carrito está vacío.")
             }

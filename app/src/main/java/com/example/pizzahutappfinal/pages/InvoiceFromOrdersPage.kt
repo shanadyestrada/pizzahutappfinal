@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -35,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.pizzahutappfinal.R
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.pizzahutappfinal.GlobalNavigation
 import com.example.pizzahutappfinal.components.InvoiceItemView
 import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
 import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
@@ -44,9 +47,9 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
-fun InvoicePage(orderId: String, navController: NavController, modifier: Modifier = Modifier,
+fun InvoiceFromOrdersPage(orderId: String, navController: NavController, modifier: Modifier = Modifier,
                 invoiceViewModel: InvoiceViewModel = viewModel(factory = InvoiceViewModel.InvoiceViewModelFactory(orderId)
-    )
+                )
 ) {
     val order = invoiceViewModel.order.observeAsState().value
     val userProfile = invoiceViewModel.userProfile.observeAsState().value
@@ -55,7 +58,6 @@ fun InvoicePage(orderId: String, navController: NavController, modifier: Modifie
 
     var showPermissionDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val primaryColor = Color(0xFFA90A24)
 
     Column (modifier = Modifier.fillMaxWidth())  {
         Row(
@@ -72,12 +74,33 @@ fun InvoicePage(orderId: String, navController: NavController, modifier: Modifie
             )
         }
 
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                .clickable {
+                    GlobalNavigation.navController.popBackStack()
+                }
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Volver",
+                tint = Color(0xFFA90A24) // Color rojo personalizado
+            )
+            Text(
+                text = "Volver",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFFA90A24)
+            )
+        }
+
         if (isLoading || order == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+
                 // Sombrero/logo
                 Image(
                     painter = painterResource(id = R.drawable.vector),
@@ -87,35 +110,12 @@ fun InvoicePage(orderId: String, navController: NavController, modifier: Modifie
 
                 // Título
                 Text(
-                    text = "PEDIDO REALIZADO CON ÉXITO",
+                    text = "RESUMEN DE LA COMPRA",
                     fontFamily = BrixtonLeadFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 38.sp,
                 )
 
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(
-                            style = SpanStyle(
-                                color = Color(0xFFAF0014),
-                                fontWeight = FontWeight.Bold
-                            )
-                        ) {
-                            append("¡Gracias por comprar en Pizza Hut! ")
-                        }
-                        withStyle(
-                            style = SpanStyle(
-                                color = Color.Black,
-                                fontWeight = FontWeight.Medium
-                            )
-                        ) {
-                            append("Te mostramos un resumen de tu orden.")
-                        }
-                    },
-                    fontFamily = SharpSansFontFamily,
-                    fontSize = 16.sp,
-                    lineHeight = 20.sp
-                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -132,11 +132,11 @@ fun InvoicePage(orderId: String, navController: NavController, modifier: Modifie
                         .border(width = 1.dp, color = Color.Gray, shape = RoundedCornerShape(8.dp))
                         .padding(16.dp)
                 ) {
-                    InvoiceAnnotatedItem(label = "Número de Boleta: ", value = order.orderId)
+                    InvoiceAnnotatedItemOrderPage(label = "Número de Boleta: ", value = order.orderId)
 
                     // Fecha y Hora
                     order.timestamp?.let { date ->
-                        InvoiceAnnotatedItem(
+                        InvoiceAnnotatedItemOrderPage(
                             label = "Fecha y Hora: ",
                             value = SimpleDateFormat(
                                 "dd/MM/yyyy HH:mm",
@@ -147,28 +147,28 @@ fun InvoicePage(orderId: String, navController: NavController, modifier: Modifie
 
                     // Comprobante
                     order.tipoComprobante?.let {
-                        InvoiceAnnotatedItem(label = "Comprobante: ", value = it.nombre)
+                        InvoiceAnnotatedItemOrderPage(label = "Comprobante: ", value = it.nombre)
                     }
 
                     // Tipo de Servicio
                     val serviceType =
                         if (order.deliveryDireccion != null) "Delivery" else "Recojo en Tienda"
-                    InvoiceAnnotatedItem(label = "Tipo de Servicio: ", value = serviceType)
+                    InvoiceAnnotatedItemOrderPage(label = "Tipo de Servicio: ", value = serviceType)
 
                     // Dirección o Local
                     order.deliveryDireccion?.let {
-                        InvoiceAnnotatedItem(
+                        InvoiceAnnotatedItemOrderPage(
                             label = "Dirección de Envío: ",
                             value = "${it.direccion}"
                         )
                     }
                     order.localDeRecojo?.let {
-                        InvoiceAnnotatedItem(label = "Local de Recojo: ", value = it.nombre)
+                        InvoiceAnnotatedItemOrderPage(label = "Local de Recojo: ", value = it.nombre)
                     }
 
                     // Método de Pago
                     order.metodoPago?.let {
-                        InvoiceAnnotatedItem(label = "Método de Pago: ", value = it.nombre)
+                        InvoiceAnnotatedItemOrderPage(label = "Método de Pago: ", value = it.nombre)
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -313,22 +313,6 @@ fun InvoicePage(orderId: String, navController: NavController, modifier: Modifie
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Button(
-                    onClick = {
-                        navController.navigate("home") {
-                            popUpTo("home") { inclusive = true }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(5.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-                ) {
-                    Text("VOLVER AL INICIO",modifier = Modifier.padding(5.dp),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = SharpSansFontFamily,
-                        letterSpacing = 2.sp)
-                }
 
             }
 
@@ -338,7 +322,7 @@ fun InvoicePage(orderId: String, navController: NavController, modifier: Modifie
 }
 
 @Composable
-fun InvoiceAnnotatedItem(
+fun InvoiceAnnotatedItemOrderPage(
     label: String,
     value: String,
     labelColor: Color = Color(0xFFAF0014),

@@ -56,6 +56,8 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
     implementation ("androidx.compose.runtime:runtime-livedata:1.0.5")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation(libs.androidx.foundation)
     implementation(libs.material3)
     implementation(libs.androidx.foundation.layout)

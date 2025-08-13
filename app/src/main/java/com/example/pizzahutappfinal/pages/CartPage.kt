@@ -70,8 +70,6 @@ fun CartPage(modifier: Modifier = Modifier) {
             listener.remove()
         }
     }
-
-
         Column(
         modifier = Modifier.fillMaxSize()
     ) {

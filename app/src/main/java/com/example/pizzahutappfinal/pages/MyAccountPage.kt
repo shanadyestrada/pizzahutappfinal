@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -18,13 +20,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.pizzahutappfinal.GlobalNavigation.navController
 import com.example.pizzahutappfinal.R
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
+import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
 
 object Routes {
     const val MY_ACCOUNT = "my_account"
@@ -36,48 +42,51 @@ object Routes {
 
 @Composable
 fun MyAccountPage(
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 32.dp, vertical = 64.dp),
+    modifier: Modifier = Modifier, navController: NavController) {
+
+    Column (modifier = Modifier
+        .fillMaxSize()
+        .padding(horizontal = 32.dp, vertical = 94.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
-    ) {
+    ){
         Image(
             painter = painterResource(id = R.drawable.vector),
-            contentDescription = stringResource(R.string.pizza_hut_logo_description)
+            contentDescription = "Logo",
+            modifier = Modifier.size(88.dp)
         )
-
-        Spacer(modifier = Modifier.height(48.dp))
-
         Text(
-            text = "Mi Cuenta",
-            style = MaterialTheme.typography.headlineLarge.copy(color = Color.Black)
+            text = "MI CUENTA",
+            fontFamily = BrixtonLeadFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 45.sp,
         )
-        Spacer(modifier = Modifier.height(48.dp)) // Space below title
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         AccountActionButton(
             text = "Mi información",
-            onClick = { navController.navigate(Routes.PROFILE_DETAILS) }, // Direct navigation
-            backgroundColor = Color(0xFFC02128) // Pizza Hut Red
+            onClick = {  },
+            backgroundColor = Color(0xFFA90A24)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         AccountActionButton(
             text = "Mis direcciones",
-            onClick = { navController.navigate(Routes.MY_ADDRESSES) }, // Direct navigation
-            backgroundColor = Color(0xFFC02128) // Pizza Hut Red
+            onClick = { navController.navigate("addressesPage") },
+            backgroundColor = Color(0xFFA90A24)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         AccountActionButton(
             text = "Ver mis pedidos",
-            onClick = { navController.navigate(Routes.MY_ORDERS) }, // Direct navigation
-            backgroundColor = Color(0xFFC02128) // Pizza Hut Red
+            onClick = { navController.navigate("order_history") },
+            backgroundColor = Color(0xFFA90A24)
         )
-        Spacer(modifier = Modifier.height(32.dp)) // More space before logout button
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         AccountActionButton(
             text = "Cerrar Sesión",
@@ -91,6 +100,7 @@ fun MyAccountPage(
             backgroundColor = Color.Black,
             textColor = Color.White
         )
+
     }
 }
 
@@ -100,15 +110,21 @@ private fun AccountActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     backgroundColor: Color,
-    textColor: Color = Color.White // Default to white text
+    textColor: Color = Color.White
 ) {
+
     Button(
         onClick = onClick,
         modifier = modifier
-            .fillMaxWidth() // Makes button take full width
-            .height(56.dp), // Fixed height for consistency
+            .fillMaxWidth()
+            .height(46.dp),
+        shape = RoundedCornerShape(6.dp),
         colors = ButtonDefaults.buttonColors(containerColor = backgroundColor)
     ) {
-        Text(text = text, style = MaterialTheme.typography.titleMedium, color = textColor)
+        Text(text = text,
+            color = textColor,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = SharpSansFontFamily,
+        )
     }
 }

@@ -13,5 +13,6 @@ data class OrderModel(
     val metodoPago: MetodoPagoModel? = null,
     val tipoComprobante: TipoComprobanteModel? = null,
     @ServerTimestamp
-    var timestamp: Date? = null
+    var timestamp: Date? = null,
+    val orderTotal: Double = 0.0
 )

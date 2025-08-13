@@ -8,11 +8,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.pizzahutappfinal.pages.AddressesPage
 import com.example.pizzahutappfinal.pages.MyAccountPage
 import com.example.pizzahutappfinal.pages.CategoryProductsPage
 import com.example.pizzahutappfinal.pages.CheckoutPage
 import com.example.pizzahutappfinal.pages.EditProfilePage
+import com.example.pizzahutappfinal.pages.InvoiceFromOrdersPage
 import com.example.pizzahutappfinal.pages.InvoicePage
+import com.example.pizzahutappfinal.pages.OrderHistoryPage
 import com.example.pizzahutappfinal.pages.ProductDetailsPage
 import com.example.pizzahutappfinal.screen.AuthScreen
 import com.example.pizzahutappfinal.screen.HomeScreen
@@ -74,13 +77,31 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
 
             composable("account"){
-                MyAccountPage(modifier)
+                MyAccountPage(modifier, navController)
             }
             composable("profile_details"){
                 ProfilePage(modifier)
             }
             composable("edit_profile"){
                 EditProfilePage(modifier, navController)
+            }
+
+            composable("order_history") {
+                OrderHistoryPage(navController = navController)
+            }
+
+            composable("addressesPage") {
+                AddressesPage(navController = navController)
+            }
+
+            composable(
+                "invoiceFromOrdersPage/{orderId}",
+                arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getString("orderId")
+                if (orderId != null) {
+                    InvoiceFromOrdersPage(navController = navController, orderId = orderId)
+                }
             }
         }
 
