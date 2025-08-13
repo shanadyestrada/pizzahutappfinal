@@ -91,8 +91,7 @@ fun AddressesPage(navController: NavController, viewModel: AddressesViewModel = 
 
         // El contenido principal de la página
         Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally // Para centrar el contenido horizontalmente
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
         ) {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 if (isLoading) {
