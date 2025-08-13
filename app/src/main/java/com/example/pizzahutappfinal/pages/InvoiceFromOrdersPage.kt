@@ -65,12 +65,13 @@ fun InvoiceFromOrdersPage(orderId: String, navController: NavController, modifie
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .background(Color(0xFFAF0014))
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Mi Header",
-                color = Color.White
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo Pizza Hut",
+                modifier = Modifier.size(34.dp)
             )
         }
 
@@ -95,8 +96,12 @@ fun InvoiceFromOrdersPage(orderId: String, navController: NavController, modifie
         }
 
         if (isLoading || order == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator(color = Color(0xFFA90A24))
             }
         } else {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {

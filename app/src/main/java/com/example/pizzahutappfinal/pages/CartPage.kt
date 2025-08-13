@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +52,7 @@ fun CartPage(modifier: Modifier = Modifier) {
     }
     val primaryColor = Color(0xFFA90A24)
     val cartTotal = remember { mutableStateOf(0.0) }
+    val isLoading = remember { mutableStateOf(true) }
 
     DisposableEffect(key1 = Unit) {
         val listener = Firebase.firestore.collection("usuarios")
@@ -65,6 +67,7 @@ fun CartPage(modifier: Modifier = Modifier) {
                         }
                     }
                 }
+                isLoading.value = false
             }
         onDispose {
             listener.remove()
@@ -91,37 +94,46 @@ fun CartPage(modifier: Modifier = Modifier) {
             )
         }
 
-        if (userModel.value.cartItems.isNotEmpty()) {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                contentPadding = PaddingValues(
-                    start = 18.dp,
-                    end = 18.dp,
-                    top = 5.dp,
-                    bottom = 5.dp
-                ),
-            ) {
-                items(userModel.value.cartItems, key = { it.productoId + (it.variaciones ?: "") + it.adicionales.joinToString() }) { cartItem ->
-                    // Ahora pasas el objeto CartItemModel completo a tu vista
-                    CartItemView(cartItem = cartItem)
+            if (isLoading.value) {
+                Column(
+                    modifier = Modifier.fillMaxSize().weight(1f),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(color = primaryColor)
+                }
+            } else {
+                if (userModel.value.cartItems.isNotEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        contentPadding = PaddingValues(
+                            start = 18.dp,
+                            end = 18.dp,
+                            top = 5.dp,
+                            bottom = 5.dp
+                        ),
+                    ) {
+                        items(userModel.value.cartItems, key = { it.productoId + (it.variaciones ?: "") + it.adicionales.joinToString() }) { cartItem ->
+
+                            CartItemView(cartItem = cartItem)
+                        }
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxSize().weight(1f),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Tu carrito está vacío",
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize().weight(1f),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Tu carrito está vacío",
-                    fontSize = 18.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -129,7 +141,7 @@ fun CartPage(modifier: Modifier = Modifier) {
                     .padding(top = 8.dp) // Opcional: padding superior para separar
             ) {
                 // --- 2. Tu Row del total, ahora dentro de la nueva Column ---
-                if (userModel.value.cartItems.isNotEmpty()) {
+                if (!isLoading.value && userModel.value.cartItems.isNotEmpty()) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -152,9 +164,9 @@ fun CartPage(modifier: Modifier = Modifier) {
                     }
                 }
 
-                // --- 3. Tu Button, ahora dentro de la nueva Column ---
                 Button(
                     onClick = { GlobalNavigation.navController.navigate("checkout") },
+                    enabled = userModel.value.cartItems.isNotEmpty(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
@@ -164,7 +176,10 @@ fun CartPage(modifier: Modifier = Modifier) {
                             bottom = 72.dp
                         ),
                     shape = RoundedCornerShape(5.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = primaryColor,
+                        disabledContainerColor = Color.LightGray
+                    )
                 ) {
                     Text(
                         text = "Proceder al Pago",
@@ -172,7 +187,8 @@ fun CartPage(modifier: Modifier = Modifier) {
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = SharpSansFontFamily,
-                        letterSpacing = 2.sp
+                        letterSpacing = 2.sp,
+                        color = if (userModel.value.cartItems.isNotEmpty()) Color.White else Color.Gray
                     )
                 }
             }

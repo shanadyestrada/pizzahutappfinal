@@ -33,7 +33,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 
 @Composable
-fun CategoriesView(modifier: Modifier = Modifier) {
+fun CategoriesView(categoryList: List<CategoryModel>, modifier: Modifier = Modifier) {
     val categoryList = remember {
         mutableStateOf<List<CategoryModel>>(emptyList())
     }
@@ -85,7 +85,7 @@ fun CategoItem(category : CategoryModel, modifier: Modifier = Modifier) {
     ){
         Column (
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize().padding(10.dp)
+            modifier = Modifier.fillMaxSize()
         ){
             AsyncImage(
                 model = category.imageUrl,
@@ -100,7 +100,7 @@ fun CategoItem(category : CategoryModel, modifier: Modifier = Modifier) {
                 text = category.nombre,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp,
-                modifier = Modifier.padding(4.dp)
+                modifier = Modifier.padding(10.dp)
             )
         }
     }

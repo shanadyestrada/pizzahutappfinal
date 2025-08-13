@@ -1,6 +1,7 @@
 package com.example.pizzahutappfinal.screen
 
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
@@ -33,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,6 +45,7 @@ import com.example.pizzahutappfinal.pages.LocalPage
 import com.example.pizzahutappfinal.pages.MyAccountPage
 
 import androidx.navigation.NavController
+import com.example.pizzahutappfinal.R
 import com.example.pizzahutappfinal.pages.CartPage
 import com.example.pizzahutappfinal.pages.CategoriePage
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -103,22 +107,22 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            // HEADER debajo de status bar
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding() // ajusta automáticamente
-                    .background(Color(0xFFAF0014))
-                    .padding(horizontal = 16.dp, vertical = 14.dp), // controla el espacio interno
+                    .statusBarsPadding()
+                    .background(Color(0xFFA90A24))
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Mi Header",
-                    color = Color.White
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo Pizza Hut",
+                    modifier = Modifier.size(34.dp)
                 )
             }
 
-            // Contenido
             ContentScreen(
                 modifier = Modifier.fillMaxSize(),
                 selectedIndex = selectedIndex,

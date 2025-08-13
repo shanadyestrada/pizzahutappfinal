@@ -63,12 +63,13 @@ fun InvoicePage(orderId: String, navController: NavController, modifier: Modifie
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .background(Color(0xFFAF0014))
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Mi Header",
-                color = Color.White
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo Pizza Hut",
+                modifier = Modifier.size(34.dp)
             )
         }
 

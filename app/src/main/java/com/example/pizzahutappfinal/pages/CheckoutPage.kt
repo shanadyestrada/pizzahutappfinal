@@ -109,6 +109,15 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
     var isBoletaElectronicaChecked by remember { mutableStateOf(false) }
     var isFacturaChecked by remember { mutableStateOf(false) }
 
+    var cardName by remember { mutableStateOf("") }
+    var cardNumber by remember { mutableStateOf("") }
+    var cardExpiry by remember { mutableStateOf("") }
+    var cardCvv by remember { mutableStateOf("") }
+
+    // 🆕 Declara los estados para los campos de la factura
+    var facturaRuc by remember { mutableStateOf("") }
+    var facturaRazonSocial by remember { mutableStateOf("") }
+
     val selectedComprobante by remember {
         derivedStateOf {
             when {
@@ -130,12 +139,13 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .background(Color(0xFFAF0014))
-                .padding(horizontal = 16.dp, vertical = 14.dp), // controla el espacio interno
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Mi Header",
-                color = Color.White
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo Pizza Hut",
+                modifier = Modifier.size(34.dp)
             )
         }
         Row(
@@ -376,7 +386,16 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                                 .background(Color.LightGray.copy(alpha = 0.3f),
                                     shape = RoundedCornerShape(8.dp))) {
 
-                                CardFields()
+                                CardFields(
+                                    cardName = cardName,
+                                    onCardNameChange = { cardName = it },
+                                    cardNumber = cardNumber,
+                                    onCardNumberChange = { cardNumber = it },
+                                    cardExpiry = cardExpiry,
+                                    onCardExpiryChange = { cardExpiry = it },
+                                    cardCvv = cardCvv,
+                                    onCardCvvChange = { cardCvv = it }
+                                )
                             }
                         }
                     }
@@ -469,6 +488,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                             fontSize = 11.sp,
                             fontFamily = SharpSansFontFamily,
                             fontWeight = FontWeight.Medium,
+                            lineHeight = 14.sp
                         )
                     }
                 }
@@ -512,7 +532,12 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                 if (isFacturaChecked) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        FacturaFields()
+                        FacturaFields(
+                            ruc = facturaRuc,
+                            onRucChange = { facturaRuc = it },
+                            razonSocial = facturaRazonSocial,
+                            onRazonSocialChange = { facturaRazonSocial = it }
+                        )
                     }
                 }
 
@@ -555,6 +580,22 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                         if (selectedMetodoPago == null) {
                             showToast(context, "Por favor, seleccione un método de pago.")
                             return@Button
+                        }
+
+                        val isPagoEnLineaSelected = selectedMetodoPago?.nombre == "Pago en Línea"
+                        if (isPagoEnLineaSelected) {
+                            if (cardName.isEmpty() || cardNumber.isEmpty() || cardExpiry.isEmpty() || cardCvv.isEmpty()) {
+                                showToast(context, "Por favor, complete todos los campos de su tarjeta.")
+                                return@Button
+                            }
+                        }
+
+                        // 🆕 4. Validar campos de factura si está seleccionado
+                        if (isFacturaChecked) {
+                            if (facturaRuc.isEmpty() || facturaRazonSocial.isEmpty()) {
+                                showToast(context, "Por favor, complete los campos de RUC y Razón Social.")
+                                return@Button
+                            }
                         }
 
                         when (selectedDeliveryOption) {
@@ -979,17 +1020,23 @@ fun DeliveryAndPickupOptions(selectedDeliveryOption: DeliveryOption, onOptionSel
 }
 
 @Composable
-fun CardFields() {
-    var titular by remember { mutableStateOf("") }
-    var numero by remember { mutableStateOf("") }
-    var mmAA by remember { mutableStateOf("") }
-    var cvv by remember { mutableStateOf("") }
-
+fun CardFields(
+    // 🆕 Nombres de parámetros corregidos para que coincidan con la llamada
+    cardName: String,
+    onCardNameChange: (String) -> Unit,
+    cardNumber: String,
+    onCardNumberChange: (String) -> Unit,
+    cardExpiry: String,
+    onCardExpiryChange: (String) -> Unit,
+    cardCvv: String,
+    onCardCvvChange: (String) -> Unit
+) {
     Column(modifier = Modifier.padding(12.dp)
     ) {
         OutlinedTextField(
-            value = titular,
-            onValueChange = { titular = it },
+            // 🆕 Se usa el nuevo nombre del parámetro
+            value = cardName,
+            onValueChange = onCardNameChange,
             label = { Text(text = "Titular de la Tarjeta",
                 fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
                 fontSize = 12.sp, color = Color.Gray) },
@@ -1001,8 +1048,9 @@ fun CardFields() {
         )
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
-            value = numero,
-            onValueChange = { numero = it },
+            // 🆕 Se usa el nuevo nombre del parámetro
+            value = cardNumber,
+            onValueChange = onCardNumberChange,
             label = { Text(text = "Número de Tarjeta",
                 fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
                 fontSize = 12.sp, color = Color.Gray) },
@@ -1018,8 +1066,9 @@ fun CardFields() {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedTextField(
-                value = mmAA,
-                onValueChange = { mmAA = it },
+                // 🆕 Se usa el nuevo nombre del parámetro
+                value = cardExpiry,
+                onValueChange = onCardExpiryChange,
                 label = { Text(text = "MMAA",
                     fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
                     fontSize = 12.sp, color = Color.Gray) },
@@ -1031,8 +1080,9 @@ fun CardFields() {
                 )
             )
             OutlinedTextField(
-                value = cvv,
-                onValueChange = { cvv = it },
+                // 🆕 El nombre del parámetro ya era correcto, pero se mantiene la consistencia
+                value = cardCvv,
+                onValueChange = onCardCvvChange,
                 label = { Text(text = "CVV",
                     fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
                     fontSize = 13.sp, color = Color.Gray) },
@@ -1048,10 +1098,12 @@ fun CardFields() {
 }
 
 @Composable
-fun FacturaFields() {
-    var ruc by remember { mutableStateOf("") }
-    var razonSocial by remember { mutableStateOf("") }
-
+fun FacturaFields(
+    ruc: String,
+    onRucChange: (String) -> Unit,
+    razonSocial: String,
+    onRazonSocialChange: (String) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1060,7 +1112,7 @@ fun FacturaFields() {
     ) {
         OutlinedTextField(
             value = ruc,
-            onValueChange = { ruc = it },
+            onValueChange = onRucChange, // 🆕 Se usa el callback
             label = {
                 Text(
                     text = "RUC",
@@ -1078,7 +1130,7 @@ fun FacturaFields() {
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = razonSocial,
-            onValueChange = { razonSocial = it },
+            onValueChange = onRazonSocialChange, // 🆕 Se usa el callback
             label = {
                 Text(
                     text = "Razón Social",

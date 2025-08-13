@@ -27,6 +27,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -73,8 +75,10 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
 
     var product by remember { mutableStateOf(ProductModel()) }
     val context = LocalContext.current
+    var isLoading by remember { mutableStateOf(true) }
+    val primaryColor = Color(0xFFA90A24)
+    val navController = GlobalNavigation.navController
 
-    // Nuevo estado para controlar la visibilidad del menú desplegable.
     var isDropdownExpanded by remember { mutableStateOf(false) }
     var selectedVariation by remember { mutableStateOf<Pair<String, String>?>(null) }
     var selectedPrice by remember { mutableStateOf(0.0) }
@@ -82,6 +86,7 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
     var selectedAdicionales by remember { mutableStateOf(emptySet<String>()) }
 
     LaunchedEffect(productId) {
+        isLoading = true // 🆕 Al iniciar la carga, establecemos isLoading en true
         val snapshot = Firebase.firestore
             .collection("data").document("stock")
             .collection("productos")
@@ -101,9 +106,8 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
                 selectedPrice = it.precio.toDoubleOrNull() ?: 0.0
             }
         }
+        isLoading = false // 🆕 Al terminar la carga, establecemos isLoading en false
     }
-
-    // Usar LaunchedEffect para recalcular el precio cuando cambien las selecciones
     LaunchedEffect(selectedVariation, selectedAdicionales) {
         if (product.categoria.lowercase() == "pizzas" && selectedVariation != null) {
             val (size, crust) = selectedVariation!!
@@ -129,85 +133,52 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
         }
     }
 
-
-    // Estructura con Scaffold para fijar el botón
-    Scaffold (
-        bottomBar = {
-            Button(
-                onClick = {
-                    val variationKey = if (product.categoria == "pizzas" && selectedVariation != null) {
-                        "${selectedVariation!!.first}_${selectedVariation!!.second}"
-                    } else {
-                        null
-                    }
-                    AppUtil.addToCart(context, productId, variationKey, selectedAdicionales.toList())
-                },
-                shape = RoundedCornerShape(5.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFAF0014))
-            ) {
-                Text(
-                    "AGREGAR AL CARRITO",
-                    modifier = Modifier.padding(5.dp),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = SharpSansFontFamily,
-                    letterSpacing = 2.sp
-                )
-            }
-        }
-    ) { innerPadding ->
-        Column(
+    Column (modifier = Modifier.fillMaxWidth())  {
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding) // deja espacio al bottomBar
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .background(Color(0xFFAF0014))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // HEADER
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .background(Color(0xFFAF0014))
-                    .padding(horizontal = 16.dp,  vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Mi Header",
-                    color = Color.White
-                )
-            }
-
-            // FLECHA VOLVER
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .clickable {
-                        GlobalNavigation.navController.popBackStack()
-                    }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color(0xFFA90A24)
-                )
-                Text(
-                    text = "Volver",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFFA90A24)
-                )
-            }
-
-            // CONTENIDO SCROLLEABLE
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp)
-            ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo Pizza Hut",
+                modifier = Modifier.size(34.dp)
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                .clickable {
+                    GlobalNavigation.navController.popBackStack()
+                }
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Volver",
+                tint = Color(0xFFA90A24)
+            )
+            Text(
+                text = "Volver",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFFA90A24)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            if (isLoading) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(color = primaryColor)
+                }
+            } else {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 AsyncImage(
                     model = product.image,
                     contentDescription = product.nombre,
@@ -233,13 +204,12 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
                     text = product.descripcion,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 15.sp
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // AÑADIMOS ESTA SECCIÓN PARA LAS TARJETAS VISUALES
+                Spacer(modifier = Modifier.height(20.dp))
+
                 if (product.categoria.lowercase() == "pizzas") {
-                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "TAMAÑOS DISPONIBLES",
                         fontWeight = FontWeight.SemiBold,
@@ -248,6 +218,7 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
                         fontFamily = SharpSansFontFamily
                     )
                     Spacer(modifier = Modifier.height(10.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -288,7 +259,6 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // === SECCIÓN VISUAL DE CORTEZAS ===
                 if (product.categoria.lowercase() == "pizzas" && product.variaciones != null) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
@@ -325,18 +295,21 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
                                 "CheeseBites", "HutCheese" -> "5.00"
                                 else -> null
                             }
-                            CrustCardVisual(
-                                nombre = corteza,
-                                adicional = adicional
-                            )
+
+                            val imageResId = AppUtil.CrustImages.images[corteza]
+                            if (imageResId != null) {
+                                CrustCardVisual(
+                                    nombre = corteza,
+                                    adicional = adicional,
+                                    imageResId = imageResId
+                                )
+                            }
                         }
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
 
                 }
-
-                // Combobox y precio para productos con variaciones
                 if (product.categoria == "pizzas" && product.variaciones != null) {
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
                         "SELECCIONA TAMAÑO Y CORTEZA:",
@@ -379,97 +352,179 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
                                 .background(Color.White)
                         ) {
                             product.variaciones?.familiar?.let { tamano ->
-                                addCrustMenuItems("familiar", tamano, onSelect = { size, crust, price ->
-                                    selectedVariation = Pair(size, crust)
-                                    selectedPrice = price.toDoubleOrNull() ?: 0.0
-                                    isDropdownExpanded = false
-                                })
+                                addCrustMenuItems(
+                                    "familiar",
+                                    tamano,
+                                    onSelect = { size, crust, price ->
+                                        selectedVariation = Pair(size, crust)
+                                        selectedPrice = price.toDoubleOrNull() ?: 0.0
+                                        isDropdownExpanded = false
+                                    })
                             }
                             product.variaciones?.grande?.let { tamano ->
-                                addCrustMenuItems("grande", tamano, onSelect = { size, crust, price ->
-                                    selectedVariation = Pair(size, crust)
-                                    selectedPrice = price.toDoubleOrNull() ?: 0.0
-                                    isDropdownExpanded = false
-                                })
+                                addCrustMenuItems(
+                                    "grande",
+                                    tamano,
+                                    onSelect = { size, crust, price ->
+                                        selectedVariation = Pair(size, crust)
+                                        selectedPrice = price.toDoubleOrNull() ?: 0.0
+                                        isDropdownExpanded = false
+                                    })
                             }
                             product.variaciones?.mediana?.let { tamano ->
-                                addCrustMenuItems("mediana", tamano, onSelect = { size, crust, price ->
-                                    selectedVariation = Pair(size, crust)
-                                    selectedPrice = price.toDoubleOrNull() ?: 0.0
-                                    isDropdownExpanded = false
-                                })
+                                addCrustMenuItems(
+                                    "mediana",
+                                    tamano,
+                                    onSelect = { size, crust, price ->
+                                        selectedVariation = Pair(size, crust)
+                                        selectedPrice = price.toDoubleOrNull() ?: 0.0
+                                        isDropdownExpanded = false
+                                    })
                             }
                         }
                     }
 
-                    // 🆕 Nueva sección para los adicionales
-                    if (product.adicionales.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "ADICIONALES",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 18.sp
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Column {
-                            product.adicionales.forEach { (adicional, precio) ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            selectedAdicionales = if (selectedAdicionales.contains(adicional)) {
-                                                selectedAdicionales - adicional
-                                            } else {
-                                                selectedAdicionales + adicional
-                                            }
-                                        }
-                                        .padding(vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Checkbox(
-                                        checked = selectedAdicionales.contains(adicional),
-                                        onCheckedChange = { isChecked ->
-                                            selectedAdicionales = if (isChecked) {
-                                                selectedAdicionales + adicional
-                                            } else {
-                                                selectedAdicionales - adicional
-                                            }
-                                        }
-                                    )
-                                    Text(
-                                        text = adicional.replaceFirstChar { it.uppercase() },
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Text(
-                                        // 🛠️ CAMBIO: Convertimos el precio de String a Double de forma segura
-                                        text = "+ S/. %.2f".format(precio.toDoubleOrNull() ?: 0.0),
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                            }
-                        }
-                    }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Precio: $$selectedPrice",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFAF0014)
-                    )
-
-                } else {
-                    // Precio para productos sin variaciones
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Precio: $$selectedPrice",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFAF0014)
-                    )
                 }
 
-            }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (product.adicionales.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Complementa tu pizza con nuestros ingredientes:",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 19.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(
+                                width = 1.dp,
+                                color = Color.LightGray,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        product.adicionales.forEach { (adicional, precio) ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedAdicionales =
+                                            if (selectedAdicionales.contains(adicional)) {
+                                                selectedAdicionales - adicional
+                                            } else {
+                                                selectedAdicionales + adicional
+                                            }
+                                    }
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(
+                                    checked = selectedAdicionales.contains(adicional),
+                                    onCheckedChange = { isChecked ->
+                                        selectedAdicionales = if (isChecked) {
+                                            selectedAdicionales + adicional
+                                        } else {
+                                            selectedAdicionales - adicional
+                                        }
+                                    },
+                                    // 🆕 Se cambian los colores del Checkbox
+                                    colors = CheckboxDefaults.colors(
+                                        checkedColor = Color(0xFFA90A24),
+                                        uncheckedColor = Color(0xFFA90A24),
+                                        checkmarkColor = Color.White
+                                    )
+                                )
+                                Text(
+                                    text = adicional.replaceFirstChar { it.uppercase() },
+                                    modifier = Modifier.weight(1f),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = "+ S/. %.2f".format(precio.toDoubleOrNull() ?: 0.0),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val additionalPrice = product.adicionales
+                    .filterKeys { selectedAdicionales.contains(it) }
+                    .values
+                    .sumOf { it.toDoubleOrNull() ?: 0.0 }
+                val finalPrice = selectedPrice + additionalPrice
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "TOTAL",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            fontFamily = SharpSansFontFamily
+                        )
+                        Text(
+                            text = "S/. %.2f".format(finalPrice),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFAF0014),
+                            fontFamily = SharpSansFontFamily
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            val variationKey =
+                                if (product.categoria == "pizzas" && selectedVariation != null) {
+                                    "${selectedVariation!!.first}_${selectedVariation!!.second}"
+                                } else {
+                                    null
+                                }
+                            AppUtil.addToCart(
+                                context,
+                                productId,
+                                variationKey,
+                                selectedAdicionales.toList()
+                            )
+                            navController.navigate("home") {
+                                popUpTo("home") { inclusive = true }
+                            }
+                        },
+                        shape = RoundedCornerShape(5.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFAF0014))
+                    ) {
+                        Text(
+                            "AGREGAR AL CARRITO",
+                            modifier = Modifier.padding(5.dp),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = SharpSansFontFamily,
+                            letterSpacing = 2.sp
+                        )
+                    }
+                }
+
+            }   }
+
         }
     }
 }
@@ -541,12 +596,12 @@ fun CardTamanoVisual(
             Text(
                 text = nombre,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontFamily = SharpSansFontFamily
             )
             Text(
                 text = "$rebanadas slices",
-                fontSize = 12.sp,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = SharpSansFontFamily,
                 color = Color.DarkGray
@@ -560,6 +615,7 @@ fun CardTamanoVisual(
 fun CrustCardVisual(
     modifier: Modifier = Modifier,
     nombre: String,
+    imageResId: Int,
     adicional: String? = null
 ) {
     Card(
@@ -581,20 +637,22 @@ fun CrustCardVisual(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Recuadro gris para la imagen
-            Box(
+
+            AsyncImage(
+                model = imageResId,
+                contentDescription = "Imagen de $nombre",
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(70.dp)
-                    .background(Color.LightGray)
+                    .clip(RoundedCornerShape(4.dp))
             )
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Contenido de texto
             Text(
                 text = nombre,
                 fontWeight = FontWeight.SemiBold,
@@ -604,14 +662,13 @@ fun CrustCardVisual(
                 color = Color.Black
             )
 
-            // Precio adicional
             if (adicional != null) {
                 Text(
                     text = "+ S/$adicional",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = SharpSansFontFamily,
-                    color = Color.Gray // Color rojo
+                    color = Color.Gray
                 )
             }
         }

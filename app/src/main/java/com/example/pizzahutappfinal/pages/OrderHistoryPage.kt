@@ -55,12 +55,13 @@ fun OrderHistoryPage(navController: NavController, viewModel: OrderHistoryViewMo
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .background(Color(0xFFAF0014))
-                .padding(horizontal = 16.dp, vertical = 14.dp), // controla el espacio interno
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Mi Header",
-                color = Color.White
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo Pizza Hut",
+                modifier = Modifier.size(34.dp)
             )
         }
         Row(
@@ -105,7 +106,13 @@ fun OrderHistoryPage(navController: NavController, viewModel: OrderHistoryViewMo
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             Column (modifier = Modifier.padding(horizontal = 16.dp)) {
                 if (isLoading) {
-                    CircularProgressIndicator()
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFFA90A24))
+                    }
                 } else if (orders.isEmpty()) {
                     Text("No tienes pedidos realizados aún.")
                 } else {

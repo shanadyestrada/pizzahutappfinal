@@ -270,8 +270,10 @@ object AppUtil {
                         .addOnSuccessListener {
                             userDocRef.update("cartItems", emptyList<CartItemModel>())
                                 .addOnSuccessListener {
-                                    showToast(context, "Pedido realizado con éxito. ID: $orderId")
-                                    navController.navigate("invoicePage/$orderId")
+                                    showToast(context, "Pedido realizado con éxito.")
+                                    navController.navigate("invoicePage/$orderId") {
+                                        popUpTo("home") { inclusive = false }
+                                    }
                                 }
                                 .addOnFailureListener {
                                     showToast(
@@ -308,4 +310,14 @@ object AppUtil {
                 onResult(emptyList())
             }
     }
+    object CrustImages {
+        val images = mapOf(
+            "Artesanal" to R.drawable.artesanal,
+            "Delgada" to R.drawable.delgada,
+            "Pan" to R.drawable.masapan,
+            "CheeseBites" to R.drawable.cheesebites,
+            "HutCheese" to R.drawable.hutcheese
+        )
+    }
 }
+
