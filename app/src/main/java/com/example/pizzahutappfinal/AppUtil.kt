@@ -1,6 +1,8 @@
 package com.example.pizzahutappfinal
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.navigation.NavController
 import com.example.pizzahutappfinal.model.CartItemModel
@@ -318,6 +320,25 @@ object AppUtil {
             "CheeseBites" to R.drawable.cheesebites,
             "HutCheese" to R.drawable.hutcheese
         )
+    }
+
+    fun openMapsForLocal(context: Context, latitud: Double, longitud: Double) {
+        val gmmIntentUri = Uri.parse("geo:$latitud,$longitud?q=$latitud,$longitud")
+        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+        mapIntent.setPackage("com.google.android.apps.maps") // Opcional: Intenta abrir solo con Google Maps
+
+        if (mapIntent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(mapIntent)
+        } else {
+            // Opcional: Si Google Maps no está instalado, abre cualquier otra app de mapas
+            val genericMapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+            if (genericMapIntent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(genericMapIntent)
+            } else {
+                // Manejar el caso en que no haya ninguna app de mapas
+                // Puedes mostrar un Toast o un Snackbar
+            }
+        }
     }
 }
 

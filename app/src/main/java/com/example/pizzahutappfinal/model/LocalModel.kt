@@ -8,5 +8,6 @@ data class LocalModel(
     val direccion: String = "",
     val latitud: Double = 0.0,
     val longitud: Double = 0.0,
-    val nombre: String = ""
+    val nombre: String = "",
+    val img: String = "",
 )

@@ -1,148 +1,241 @@
 package com.example.pizzahutappfinal.pages
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pizzahutappfinal.GlobalNavigation
+import com.example.pizzahutappfinal.R
 import com.example.pizzahutappfinal.model.LocalModel
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.launch
+import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
+import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
+import com.example.pizzahutappfinal.viewmodel.LocalViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.rememberAsyncImagePainter
+import com.example.pizzahutappfinal.AppUtil
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocalPage(modifier: Modifier = Modifier) {
-    var locales by remember { mutableStateOf<List<LocalModel>>(emptyList()) }
-    var selectedLocal by remember { mutableStateOf<LocalModel?>(null) }
+fun LocalPage(modifier: Modifier = Modifier, localViewModel: LocalViewModel = viewModel()) {
+    val primaryColor = Color(0xFFA90A24)
+    val isLoading by localViewModel.isLoading.observeAsState(initial = true)
+    val locales by localViewModel.locales.observeAsState(initial = emptyList())
+
     var expanded by remember { mutableStateOf(false) }
-    val defaultCameraPosition = LatLng(-11.990550902345337, -77.06284148059153)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(defaultCameraPosition, 10f)
-    }
+    var selectedLocal by remember { mutableStateOf<LocalModel?>(null) }
 
-    LaunchedEffect(Unit) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("data/local/locales")
-            .get()
-            .addOnSuccessListener { result ->
-                val lista = mutableListOf<LocalModel>()
-                for (document in result) {
-                    val local = document.toObject(LocalModel::class.java)
-                    lista.add(local)
-                }
-                locales = lista
-                Log.d("FirestoreData", "Numero de locales obtenidos: ${locales.size}")
-            }
-            .addOnFailureListener { exception ->
-                Log.e("FirestoreData", "Error al obtener los locales", exception)
-            }
-    }
-
-    LaunchedEffect(selectedLocal) {
-        selectedLocal?.let {
-            val newPosition = LatLng(it.latitud, it.longitud)
-            launch {
-                cameraPositionState.animate(
-                    update = CameraUpdateFactory.newLatLngZoom(newPosition, 15f),
-                    durationMs = 1000
-                )
-            }
+    LaunchedEffect(key1 = locales) {
+        if (locales.isNotEmpty() && selectedLocal == null) {
+            selectedLocal = locales.first()
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Dropdown para seleccionar el local
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            TextField(
-                readOnly = true,
-                value = selectedLocal?.nombre ?: "Selecciona un local",
-                onValueChange = {},
-                label = { Text("Local") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+    Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Image(
+                painter = painterResource(id = R.drawable.vector),
+                contentDescription = "Logo",
+                modifier = Modifier.size(61.dp)
+            )
+            Text(
+                text = "NUESTROS LOCALES",
+                fontFamily = BrixtonLeadFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 38.sp,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = primaryColor)
+            }
+        } else if (locales.isEmpty()) {
+            Text(
+                text = "No hay locales disponibles.",
+                modifier = Modifier.padding(16.dp)
+            )
+        } else {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor()
-            )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                locales.forEach { local ->
-                    DropdownMenuItem(
-                        text = { Text(local.nombre) },
-                        onClick = {
-                            selectedLocal = local
-                            expanded = false
+                Text(
+                    text = "Selecciona la tienda de tu preferencia",
+                    fontFamily = SharpSansFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expanded = true }
+                        .border(1.dp, Color.Gray, shape = RoundedCornerShape(8.dp))
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (selectedLocal != null) {
+                            LocalComboBoxItem(local = selectedLocal!!)
+                        } else {
+                            Text(
+                                text = "Seleccione un local",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
                         }
-                    )
+                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Expandir")
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        locales.forEach { local ->
+                            DropdownMenuItem(
+                                text = { LocalComboBoxItem(local) },
+                                onClick = {
+                                    selectedLocal = local
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (selectedLocal != null) {
+                    SelectedLocalInfo(local = selectedLocal!!)
                 }
             }
         }
+    }
+}
 
-        selectedLocal?.let { local ->
+@Composable
+fun LocalComboBoxItem(local: LocalModel) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = Icons.Default.LocationOn,
+            contentDescription = "Icono de local",
+            tint = Color(0xFFA90A24),
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
             Text(
-                text = "Dirección: ${local.direccion}",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 8.dp)
+                text = local.nombre,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = SharpSansFontFamily
             )
             Text(
-                text = "Horario de Atención: 11:30AM a 11:00PM",
-                style = MaterialTheme.typography.bodyMedium
+                text = local.direccion,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Gray,
+                fontFamily = SharpSansFontFamily,
+                lineHeight = 14.sp
             )
         }
+    }
+}
 
-        GoogleMap(
+@Composable
+fun SelectedLocalInfo(local: LocalModel) {
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // ✅ Imagen más grande
+        Image(
+            painter = rememberAsyncImagePainter(model = local.img),
+            contentDescription = "Imagen del local ${local.nombre}",
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f) // Usa weight para que ocupe el resto del espacio
-                .padding(top = 8.dp),
-            cameraPositionState = cameraPositionState
+                .height(250.dp),
+            contentScale = ContentScale.Crop
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón para abrir el mapa
+        Button(onClick = {
+            AppUtil.openMapsForLocal(context, local.latitud, local.longitud)
+        },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = Color(0xFFAF0014)
+            ),
+            shape = RoundedCornerShape(4.dp),
+            border = BorderStroke(1.dp, Color(0xFFAF0014))
         ) {
-            // Muestra todos los marcadores en el mapa
-            locales.forEach { local ->
-                Marker(
-                    state = MarkerState(position = LatLng(local.latitud, local.longitud)),
-                    title = local.nombre,
-                    snippet = local.direccion
-                )
-            }
+            Text("VER EN MAPA",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = SharpSansFontFamily,
+                letterSpacing = 2.sp)
         }
-
     }
-
 }
