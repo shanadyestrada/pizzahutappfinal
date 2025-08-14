@@ -25,6 +25,7 @@ data class UserModel (
         @set:PropertyName("userId")
         var userId : String = "",
 
+        val profileImageBase64: String = "",
         val cartItems: List<CartItemModel> = emptyList()
     )
 

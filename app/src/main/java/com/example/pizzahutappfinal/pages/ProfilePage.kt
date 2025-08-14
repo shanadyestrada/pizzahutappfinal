@@ -1,8 +1,12 @@
 package com.example.pizzahutappfinal.pages
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,14 +33,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pizzahutappfinal.GlobalNavigation
 import com.example.pizzahutappfinal.GlobalNavigation.navController
 import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
 import com.example.pizzahutappfinal.viewmodel.ProfileUiState
@@ -100,6 +107,40 @@ fun ProfilePage(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(24.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(150.dp)
+                        .clip(CircleShape)
+                        .background(Color.LightGray)
+                        .align(Alignment.CenterHorizontally),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val imageData = user.profileImageBase64.let { base64 ->
+                        try {
+                            if (base64.isNotBlank()) Base64.decode(base64, Base64.DEFAULT) else null
+                        } catch (e: IllegalArgumentException){
+                            null
+                        }
+                    }
+
+                    if (imageData != null){
+                        val bitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.size)
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Imagen de perfil",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_profile_placeholder),
+                            contentDescription = "Profile Picture Placeholder",
+                            modifier = Modifier.size(75.dp),
+                            tint = Color.White
+                        )
+                    }
+                }
 
                 OutlinedTextField(
                     value = "${user.nombre} ${user.apellidos}",
