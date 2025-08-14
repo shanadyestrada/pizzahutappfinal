@@ -13,14 +13,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -45,14 +52,18 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.pizzahutappfinal.viewmodel.ProfileUiState
 import com.example.pizzahutappfinal.viewmodel.ProfileViewModel
 import com.example.pizzahutappfinal.viewmodel.UpdateStatus
 import com.example.pizzahutappfinal.R
+import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
 import java.io.ByteArrayOutputStream
 
 @Composable
@@ -94,6 +105,8 @@ fun EditProfilePage(
             profileViewModel.setLocalImageBytes(byteArray)
         }
     }
+    val scrollState = rememberScrollState()
+
 
     LaunchedEffect(uiState) {
         if (uiState is ProfileUiState.Success) {
@@ -111,7 +124,8 @@ fun EditProfilePage(
                 val currentUser = (uiState as ProfileUiState.Success).user
                 if (userName != currentUser.nombre) updates["nombre"] = userName
                 if (userSurname != currentUser.apellidos) updates["apellidos"] = userSurname
-                if (userPhone.length == 9 && userPhone != currentUser.telefono) updates["telefono"] = userPhone
+                if (userPhone.length == 9 && userPhone != currentUser.telefono) updates["telefono"] =
+                    userPhone
             }
 
             if (localImageBytes != null) {
@@ -136,10 +150,12 @@ fun EditProfilePage(
                     launchSingleTop = true
                 }
             }
+
             UpdateStatus.ERROR -> {
                 Toast.makeText(context, "Error al actualizar el perfil", Toast.LENGTH_SHORT).show()
                 profileViewModel.resetUpdateStatus()
             }
+
             else -> {}
         }
     }
@@ -172,158 +188,216 @@ fun EditProfilePage(
         )
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
-    ) {
-        Text(
-            text = "Editar Perfil",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Box(
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
             modifier = Modifier
-                .size(150.dp)
-                .clip(CircleShape)
-                .background(Color.LightGray)
-                .clickable { showDialog = true }
-                .align(Alignment.CenterHorizontally),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .background(Color(0xFFAF0014))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // ✅ Priorizamos la imagen local seleccionada. Si no hay, usamos la de Firestore.
-            val imageData = localImageBytes ?: (uiState as? ProfileUiState.Success)?.user?.profileImageBase64?.let { base64 ->
-                try {
-                    if (base64.isNotBlank()) Base64.decode(base64, Base64.DEFAULT) else null
-                } catch (e: IllegalArgumentException) {
-                    null
-                }
-            }
-
-            if (imageData != null) {
-                val bitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.size)
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_profile_placeholder),
-                    contentDescription = "Profile Picture Placeholder",
-                    modifier = Modifier.size(75.dp),
-                    tint = Color.White
-                )
-            }
-            if (updateStatus == UpdateStatus.LOADING && localImageBytes != null) {
-                CircularProgressIndicator(modifier = Modifier.size(40.dp))
-            }
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo Pizza Hut",
+                modifier = Modifier.size(34.dp)
+            )
         }
+
         Spacer(modifier = Modifier.height(16.dp))
 
-    when (uiState) {
-        is ProfileUiState.Loading -> {
-            CircularProgressIndicator()
-            Text(text = "Cargando datos")
-        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
 
-        is ProfileUiState.Error -> {
-            Text(
-                text = "Error al cargar el perfil: ${(uiState as ProfileUiState.Error).message}",
-                color = MaterialTheme.colorScheme.error
-            )
-        }
+                Column(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.vector),
+                        contentDescription = "Logo",
+                        modifier = Modifier.size(88.dp)
+                    )
+                    Text(
+                        text = "Editar Perfil",
+                        fontFamily = BrixtonLeadFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 45.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
 
-        is ProfileUiState.Success -> {
-            OutlinedTextField(
-                value = userName,
-                onValueChange = { newValue ->
-                    if (newValue.all { it.isLetter() || it.isWhitespace() } || newValue.isBlank()) {
-                        userName = newValue
+                    Box(
+                        modifier = Modifier
+                            .size(150.dp)
+                            .clip(CircleShape)
+                            .background(Color.LightGray)
+                            .clickable { showDialog = true }
+                            .align(Alignment.CenterHorizontally),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // ✅ Priorizamos la imagen local seleccionada. Si no hay, usamos la de Firestore.
+                        val imageData = localImageBytes
+                            ?: (uiState as? ProfileUiState.Success)?.user?.profileImageBase64?.let { base64 ->
+                                try {
+                                    if (base64.isNotBlank()) Base64.decode(
+                                        base64,
+                                        Base64.DEFAULT
+                                    ) else null
+                                } catch (e: IllegalArgumentException) {
+                                    null
+                                }
+                            }
+
+                        if (imageData != null) {
+                            val bitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.size)
+                            Image(
+                                bitmap = bitmap.asImageBitmap(),
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_profile_placeholder),
+                                contentDescription = "Profile Picture Placeholder",
+                                modifier = Modifier.size(75.dp),
+                                tint = Color.White
+                            )
+                        }
+                        if (updateStatus == UpdateStatus.LOADING && localImageBytes != null) {
+                            CircularProgressIndicator(modifier = Modifier.size(40.dp))
+                        }
                     }
-                },
-                label = { Text("Nombre") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = userSurname,
-                onValueChange = { newValue ->
-                    if (newValue.all { it.isLetter() || it.isWhitespace() } || newValue.isBlank()) {
-                        userSurname = newValue
+                    when (uiState) {
+                        is ProfileUiState.Loading -> {
+                            CircularProgressIndicator()
+                            Text(text = "Cargando datos")
+                        }
+
+                        is ProfileUiState.Error -> {
+                            Text(
+                                text = "Error al cargar el perfil: ${(uiState as ProfileUiState.Error).message}",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+
+                        is ProfileUiState.Success -> {
+                            OutlinedTextField(
+                                value = userName,
+                                onValueChange = { newValue ->
+                                    if (newValue.all { it.isLetter() || it.isWhitespace() } || newValue.isBlank()) {
+                                        userName = newValue
+                                    }
+                                },
+                                label = { Text("Nombre") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            OutlinedTextField(
+                                value = userSurname,
+                                onValueChange = { newValue ->
+                                    if (newValue.all { it.isLetter() || it.isWhitespace() } || newValue.isBlank()) {
+                                        userSurname = newValue
+                                    }
+                                },
+                                label = { Text("Apellidos") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Phone TextField
+                            OutlinedTextField(
+                                value = userPhone,
+                                onValueChange = { newValue ->
+                                    if (newValue.length <= 9 && newValue.all { it.isDigit() }) {
+                                        userPhone = newValue
+                                    }
+                                },
+                                label = { Text("Teléfono") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                            )
+                            Spacer(modifier = Modifier.height(32.dp))
+
+                            Button(
+                                onClick = {
+                                    if (userName.isBlank() || userSurname.isBlank() || userPhone.isBlank()) {
+                                        Toast.makeText(
+                                            context,
+                                            "Por favor, complete todos los campos.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    } else if (userPhone.length != 9 && userPhone.isNotEmpty()) {
+                                        Toast.makeText(
+                                            context,
+                                            "El número de teléfono debe tener 9 dígitos",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    } else {
+                                        saveChangesTrigger =
+                                            true // Activa el LaunchedEffect para guardar los cambios
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(
+                                        0xFFC02128
+                                    )
+                                ),
+                                enabled = updateStatus != UpdateStatus.LOADING
+                            ) {
+                                if (updateStatus == UpdateStatus.LOADING) {
+                                    CircularProgressIndicator(color = Color.White)
+                                } else {
+                                    Text(
+                                        text = "Guardar cambios",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Button(
+                                onClick = {
+                                    navController.popBackStack()
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
+                                enabled = updateStatus != UpdateStatus.LOADING
+                            ) {
+                                Text(
+                                    text = "Cancelar",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.Black
+                                )
+                            }
+                        }
                     }
-                },
-                label = { Text("Apellidos") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-            )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Phone TextField
-            OutlinedTextField(
-                value = userPhone,
-                onValueChange = { newValue ->
-                    if (newValue.length <= 9 && newValue.all { it.isDigit() }) {
-                        userPhone = newValue
-                    }
-                },
-                label = { Text("Teléfono") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = {
-                    if (userName.isBlank() || userSurname.isBlank() || userPhone.isBlank()) {
-                        Toast.makeText(context, "Por favor, complete todos los campos.", Toast.LENGTH_LONG).show()
-                    } else if (userPhone.length != 9 && userPhone.isNotEmpty()) {
-                        Toast.makeText(context, "El número de teléfono debe tener 9 dígitos", Toast.LENGTH_LONG).show()
-                    } else {
-                        saveChangesTrigger = true // Activa el LaunchedEffect para guardar los cambios
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC02128)),
-                enabled = updateStatus != UpdateStatus.LOADING
-            ) {
-                if (updateStatus == UpdateStatus.LOADING) {
-                    CircularProgressIndicator(color = Color.White)
-                } else {
-                    Text(text = "Guardar cambios", style = MaterialTheme.typography.titleMedium)
                 }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    navController.popBackStack()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
-                enabled = updateStatus != UpdateStatus.LOADING
-            ) {
-                Text(
-                    text = "Cancelar",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Black
-                )
             }
         }
     }
-
-}
-
 }

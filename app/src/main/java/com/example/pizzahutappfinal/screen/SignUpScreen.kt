@@ -182,16 +182,17 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Fecha de Nacimiento
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(63.dp)
                     .clickable { datePickerDialog.show() }
                     .border(
                         width = 1.dp,
-                        color = Color.Black,
+                        color = Color.Gray,
                         shape = RoundedCornerShape(7.dp)
                     )
             ) {
