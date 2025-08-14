@@ -13,32 +13,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import com.example.pizzahutappfinal.GlobalNavigation.navController
 import com.example.pizzahutappfinal.R
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
 import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
-
-object Routes {
-    const val MY_ACCOUNT = "my_account"
-    const val PROFILE_DETAILS = "profile_details"
-    const val MY_ADDRESSES = "my_addresses"
-    const val MY_ORDERS = "my_orders"
-    const val LOGIN = "login" // Assuming a login screen for logout redirection
-}
 
 @Composable
 fun MyAccountPage(
