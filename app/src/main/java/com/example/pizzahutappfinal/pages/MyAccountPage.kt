@@ -66,7 +66,7 @@ fun MyAccountPage(
 
         AccountActionButton(
             text = "Mi información",
-            onClick = {  },
+            onClick = { navController.navigate("profile_details") },
             backgroundColor = Color(0xFFA90A24)
         )
 

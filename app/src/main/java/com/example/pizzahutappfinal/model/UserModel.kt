@@ -7,7 +7,7 @@ data class UserModel (
         @set:PropertyName("nombre")
         var nombre : String = "",
 
-        @get:PropertyName("apellidos") // Si en Firestore es 'apellidos'
+        @get:PropertyName("apellidos")
         @set:PropertyName("apellidos")
         var apellidos : String = "",
 
@@ -34,4 +34,3 @@ data class CartItemModel(
         val cantidad: Long = 0,
         val adicionales: List<String> = emptyList()
 )
-

@@ -12,10 +12,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +41,7 @@ import kotlin.collections.forEachIndexed
 fun AddressesPage(navController: NavController, viewModel: AddressesViewModel = viewModel()) {
     val addresses by viewModel.addresses.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    var showAddAddressDialog by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -105,14 +110,19 @@ fun AddressesPage(navController: NavController, viewModel: AddressesViewModel = 
                     }
                 } else if (addresses.isEmpty()) {
                     Text("No tienes direcciones guardadas.")
-                    Button(onClick = { /* ... */ }) {
+                    Button(onClick = { showAddAddressDialog = true }) {
                         Text("Agregar Dirección")
                     }
                 } else {
                     addresses.forEachIndexed { index, address ->
-                        AddressItem(address = address, index = index)
+                        AddressItem(
+                            address = address,
+                            index = index,
+                            onDelete = {
+                                viewModel.deleteAddress(address.direccionId)
+                            }
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
-                        // ✅ El Divider se muestra entre los elementos y no al final
                         if (index < addresses.size - 1) {
                             Divider(
                                 modifier = Modifier.padding(vertical = 16.dp),
@@ -144,7 +154,7 @@ fun AddressesPage(navController: NavController, viewModel: AddressesViewModel = 
                                 fontFamily = BrixtonLeadFontFamily
                             )
                             Spacer(modifier = Modifier.height(16.dp))
-                            Button(onClick = { /* ... */ }) {
+                            Button(onClick = { showAddAddressDialog = true }) {
                                 Text("Agregar")
                             }
                         }
@@ -153,11 +163,21 @@ fun AddressesPage(navController: NavController, viewModel: AddressesViewModel = 
             }
         }
     }
+    if (showAddAddressDialog) {
+        AddAddressDialog(
+            onDismissRequest = { showAddAddressDialog = false },
+            onAddAddress = { newAddress ->
+                // ✅ Llama a la función del ViewModel para guardar la dirección
+                viewModel.addAddress(newAddress)
+                showAddAddressDialog = false
+            }
+        )
+    }
 }
 
 @Composable
-fun AddressItem(address: DireccionModel, index: Int) {
-    Column (
+fun AddressItem(address: DireccionModel, index: Int, onDelete: () -> Unit) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
@@ -170,15 +190,82 @@ fun AddressItem(address: DireccionModel, index: Int) {
             color = Color(0xFFA90A24)
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = address.nombre, fontFamily = SharpSansFontFamily, fontWeight = FontWeight.Bold)
-            Text(text = address.direccion, fontFamily = SharpSansFontFamily, color = Color.Gray, fontWeight = FontWeight.Medium)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = address.nombre,
+                    fontFamily = SharpSansFontFamily,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = address.direccion,
+                    fontFamily = SharpSansFontFamily,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            // ✅ Icono de borrado
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Borrar dirección",
+                    tint = Color(0xFFA90A24)
+                )
+            }
         }
     }
+}
 
+        @Composable
+fun AddAddressDialog(
+    onDismissRequest: () -> Unit,
+    onAddAddress: (DireccionModel) -> Unit
+    ){
+    var addressName by remember { mutableStateOf("") }
+    var fullAddress by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Agregar nueva dirección") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = addressName,
+                    onValueChange = { addressName = it },
+                    label = { Text("Nombre de la dirección") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = fullAddress,
+                    onValueChange = { fullAddress = it },
+                    label = { Text("Dirección completa") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (addressName.isNotBlank() && fullAddress.isNotBlank()) {
+                        val newAddress = DireccionModel(direccionId = "", nombre = addressName, direccion = fullAddress)
+                        onAddAddress(newAddress)
+                    }
+                }
+            ) {
+                Text("Guardar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
