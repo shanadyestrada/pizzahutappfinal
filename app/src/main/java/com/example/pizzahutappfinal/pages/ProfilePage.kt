@@ -57,6 +57,9 @@ import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
 fun ProfilePage(
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = viewModel()) {
+
+    val primaryColor = Color(0xFFA90A24)
+
     val uiState by viewModel.userProfileState.collectAsState()
     val scrollState = rememberScrollState()
 
@@ -127,7 +130,7 @@ fun ProfilePage(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(15.dp))
 
                     Box(
                         modifier = Modifier
@@ -248,10 +251,20 @@ fun ProfilePage(
                         onClick = {
                             navController.navigate("edit_profile")
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC02128)),
-                        modifier = Modifier.fillMaxWidth().height(46.dp)
+                        colors  = ButtonDefaults.buttonColors(
+                            containerColor = primaryColor,
+                            contentColor = Color.White,
+                            disabledContainerColor = Color.LightGray),
+                        shape = RoundedCornerShape(5.dp),
+                        modifier = Modifier.fillMaxWidth()
+                            .height(60.dp).padding(top = 2.dp)
                     ) {
-                        Text(text = "Editar Datos")
+                        Text(text = "EDITAR DATOS",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = SharpSansFontFamily,
+                            letterSpacing = 2.sp,
+                            color = Color.White)
                     }
                 }
 

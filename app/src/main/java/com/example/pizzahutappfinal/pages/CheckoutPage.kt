@@ -70,8 +70,9 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                  localViewModel: LocalViewModel = viewModel(),
                  checkoutViewModel: CheckoutViewModel = viewModel()
 ) {
-    val context = LocalContext.current
     val primaryColor = Color(0xFFA90A24)
+
+    val context = LocalContext.current
     val totalPrice = checkoutViewModel.totalPrice.observeAsState(initial = 0.0).value
     val userProfile = checkoutViewModel.userProfile.observeAsState().value
     val direcciones = checkoutViewModel.direcciones.observeAsState(initial = emptyList()).value
@@ -1031,6 +1032,8 @@ fun CardFields(
     cardCvv: String,
     onCardCvvChange: (String) -> Unit
 ) {
+
+    val primaryColor = Color(0xFFA90A24)
     Column(modifier = Modifier.padding(12.dp)
     ) {
         OutlinedTextField(
@@ -1042,8 +1045,13 @@ fun CardFields(
                 fontSize = 12.sp, color = Color.Gray) },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = primaryColor,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = primaryColor,
+                unfocusedLabelColor = Color.Gray,
                 focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
+                unfocusedContainerColor = Color.White,
+                cursorColor = Color.Black
             )
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -1057,8 +1065,13 @@ fun CardFields(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = primaryColor,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = primaryColor,
+                unfocusedLabelColor = Color.Gray,
                 focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
+                unfocusedContainerColor = Color.White,
+                cursorColor = Color.Black
             )
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -1075,8 +1088,13 @@ fun CardFields(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = primaryColor,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = primaryColor,
+                    unfocusedLabelColor = Color.Gray,
                     focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    unfocusedContainerColor = Color.White,
+                    cursorColor = Color.Black
                 )
             )
             OutlinedTextField(
@@ -1089,8 +1107,13 @@ fun CardFields(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = primaryColor,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = primaryColor,
+                    unfocusedLabelColor = Color.Gray,
                     focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    unfocusedContainerColor = Color.White,
+                    cursorColor = Color.Black
                 )
             )
         }
@@ -1104,6 +1127,7 @@ fun FacturaFields(
     razonSocial: String,
     onRazonSocialChange: (String) -> Unit
 ) {
+    val primaryColor = Color(0xFFA90A24)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1123,8 +1147,13 @@ fun FacturaFields(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = primaryColor,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = primaryColor,
+                unfocusedLabelColor = Color.Gray,
                 focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
+                unfocusedContainerColor = Color.White,
+                cursorColor = Color.Black
             )
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -1140,8 +1169,13 @@ fun FacturaFields(
             },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = primaryColor,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = primaryColor,
+                unfocusedLabelColor = Color.Gray,
                 focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
+                unfocusedContainerColor = Color.White,
+                cursorColor = Color.Black
             )
         )
     }

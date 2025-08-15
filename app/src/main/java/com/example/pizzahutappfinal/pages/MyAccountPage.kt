@@ -53,7 +53,7 @@ fun MyAccountPage(
         Spacer(modifier = Modifier.height(32.dp))
 
         AccountActionButton(
-            text = "Mi información",
+            text = "MI INFORMACION",
             onClick = { navController.navigate("profile_details") },
             backgroundColor = Color(0xFFA90A24)
         )
@@ -61,7 +61,7 @@ fun MyAccountPage(
         Spacer(modifier = Modifier.height(8.dp))
 
         AccountActionButton(
-            text = "Mis direcciones",
+            text = "MIS DIRECCIONES",
             onClick = { navController.navigate("addressesPage") },
             backgroundColor = Color(0xFFA90A24)
         )
@@ -69,7 +69,7 @@ fun MyAccountPage(
         Spacer(modifier = Modifier.height(8.dp))
 
         AccountActionButton(
-            text = "Ver mis pedidos",
+            text = "VER MIS PEDIDOS",
             onClick = { navController.navigate("order_history") },
             backgroundColor = Color(0xFFA90A24)
         )
@@ -77,7 +77,7 @@ fun MyAccountPage(
         Spacer(modifier = Modifier.height(12.dp))
 
         AccountActionButton(
-            text = "Cerrar Sesión",
+            text = "CERRAR SESION",
             onClick = {
                 Firebase.auth.signOut()
                 navController.navigate("auth") {

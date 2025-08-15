@@ -1,9 +1,11 @@
 package com.example.pizzahutappfinal.pages
 
+import android.Manifest
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.widget.Toast
 import android.net.Uri
+import android.os.Build
 import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,11 +25,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -35,6 +35,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -64,6 +65,7 @@ import com.example.pizzahutappfinal.viewmodel.ProfileViewModel
 import com.example.pizzahutappfinal.viewmodel.UpdateStatus
 import com.example.pizzahutappfinal.R
 import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
+import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
 import java.io.ByteArrayOutputStream
 
 @Composable
@@ -72,6 +74,7 @@ fun EditProfilePage(
     navController: NavController,
     profileViewModel: ProfileViewModel = viewModel()
 ) {
+    val primaryColor = Color(0xFFA90A24)
 
     val uiState by profileViewModel.userProfileState.collectAsState()
     val updateStatus by profileViewModel.updateStatus.collectAsState()
@@ -103,6 +106,30 @@ fun EditProfilePage(
             val byteArray = stream.toByteArray()
             // Llama a una nueva función en el ViewModel para manejar el ByteArray
             profileViewModel.setLocalImageBytes(byteArray)
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Si el permiso es concedido, lanza la cámara
+            cameraLauncher.launch(null)
+        } else {
+            // Si no, muestra un mensaje
+            Toast.makeText(context, "El permiso de la cámara es necesario para tomar fotos.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val galleryPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Si el permiso es concedido, lanza la galería
+            galleryLauncher.launch("image/*")
+        } else {
+            // Si no, muestra un mensaje
+            Toast.makeText(context, "El permiso de la galería es necesario para seleccionar imágenes.", Toast.LENGTH_SHORT).show()
         }
     }
     val scrollState = rememberScrollState()
@@ -168,7 +195,7 @@ fun EditProfilePage(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        cameraLauncher.launch(null)
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                         showDialog = false
                     }
                 ) {
@@ -178,7 +205,12 @@ fun EditProfilePage(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        galleryLauncher.launch("image/*")
+                        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            Manifest.permission.READ_MEDIA_IMAGES
+                        } else {
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                        }
+                        galleryPermissionLauncher.launch(permission)
                         showDialog = false
                     }
                 ) {
@@ -204,8 +236,6 @@ fun EditProfilePage(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -215,8 +245,7 @@ fun EditProfilePage(
 
                 Column(
                     modifier = modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
+                        .fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
@@ -233,7 +262,7 @@ fun EditProfilePage(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Box(
                         modifier = Modifier
@@ -302,6 +331,13 @@ fun EditProfilePage(
                                 },
                                 label = { Text("Nombre") },
                                 modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = primaryColor,
+                                    unfocusedBorderColor = Color.Gray,
+                                    focusedLabelColor = primaryColor,
+                                    unfocusedLabelColor = Color.Gray,
+                                    cursorColor = Color.Black
+                                ),
                                 singleLine = true
                             )
                             Spacer(modifier = Modifier.height(16.dp))
@@ -315,6 +351,13 @@ fun EditProfilePage(
                                 },
                                 label = { Text("Apellidos") },
                                 modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = primaryColor,
+                                    unfocusedBorderColor = Color.Gray,
+                                    focusedLabelColor = primaryColor,
+                                    unfocusedLabelColor = Color.Gray,
+                                    cursorColor = Color.Black
+                                ),
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                             )
@@ -331,12 +374,24 @@ fun EditProfilePage(
                                 },
                                 label = { Text("Teléfono") },
                                 modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = primaryColor,
+                                    unfocusedBorderColor = Color.Gray,
+                                    focusedLabelColor = primaryColor,
+                                    unfocusedLabelColor = Color.Gray,
+                                    cursorColor = Color.Black
+                                ),
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                             )
                             Spacer(modifier = Modifier.height(32.dp))
 
                             Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = primaryColor,
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(5.dp),
                                 onClick = {
                                     if (userName.isBlank() || userSurname.isBlank() || userPhone.isBlank()) {
                                         Toast.makeText(
@@ -358,19 +413,18 @@ fun EditProfilePage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(
-                                        0xFFC02128
-                                    )
-                                ),
                                 enabled = updateStatus != UpdateStatus.LOADING
                             ) {
                                 if (updateStatus == UpdateStatus.LOADING) {
                                     CircularProgressIndicator(color = Color.White)
                                 } else {
                                     Text(
-                                        text = "Guardar cambios",
-                                        style = MaterialTheme.typography.titleMedium
+                                        text = "GUARDAR CAMBIOS",
+                                        color = Color.White,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = SharpSansFontFamily,
+                                        letterSpacing = 2.sp
                                     )
                                 }
                             }
@@ -378,19 +432,26 @@ fun EditProfilePage(
                             Spacer(modifier = Modifier.height(16.dp))
 
                             Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.LightGray,
+                                    contentColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(5.dp),
                                 onClick = {
                                     navController.popBackStack()
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
                                 enabled = updateStatus != UpdateStatus.LOADING
                             ) {
                                 Text(
-                                    text = "Cancelar",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.Black
+                                    text = "CANCELAR",
+                                    color = Color.Black,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = SharpSansFontFamily,
+                                    letterSpacing = 2.sp
                                 )
                             }
                         }
