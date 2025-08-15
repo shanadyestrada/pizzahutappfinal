@@ -1,15 +1,13 @@
-package com.example.pizzahutappfinal.components
+package com.example.pizzahutappfinal.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import com.example.pizzahutappfinal.AppUtil
 import com.example.pizzahutappfinal.model.OrderModel
 import com.example.pizzahutappfinal.model.UserModel
-import com.example.pizzahutappfinal.AppUtil
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
 
 class InvoiceViewModel(private val orderId: String) : ViewModel() {
     private val _order = MutableLiveData<OrderModel?>()

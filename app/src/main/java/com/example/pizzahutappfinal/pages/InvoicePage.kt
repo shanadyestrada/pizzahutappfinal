@@ -39,7 +39,7 @@ import com.example.pizzahutappfinal.components.InvoiceItemView
 import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
 import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
 
-import com.example.pizzahutappfinal.components.InvoiceViewModel
+import com.example.pizzahutappfinal.viewmodel.InvoiceViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 

@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.pizzahutappfinal.pages.AddressesPage
+import com.example.pizzahutappfinal.pages.CategoriePage
 import com.example.pizzahutappfinal.pages.MyAccountPage
 import com.example.pizzahutappfinal.pages.CategoryProductsPage
 import com.example.pizzahutappfinal.pages.CheckoutPage
@@ -50,6 +51,10 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             composable("home") {
                 HomeScreen(modifier, navController)
+            }
+
+            composable("categories_screen") {
+                CategoriePage(modifier)
             }
 
             composable("category-products/{categoryId}") {
