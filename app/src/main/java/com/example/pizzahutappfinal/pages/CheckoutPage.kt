@@ -1,5 +1,8 @@
 package com.example.pizzahutappfinal.pages
 
+import android.app.DatePickerDialog
+import android.view.View.GONE
+import android.widget.DatePicker
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -59,6 +63,7 @@ import com.example.pizzahutappfinal.ui.theme.SharpSansFontFamily
 import com.example.pizzahutappfinal.viewmodel.ComprobanteViewModel
 import com.example.pizzahutappfinal.viewmodel.LocalViewModel
 import com.example.pizzahutappfinal.viewmodel.PaymentViewModel
+import java.util.Calendar
 
 enum class DeliveryOption {
     DELIVERY, RECOJO_EN_TIENDA
@@ -66,9 +71,10 @@ enum class DeliveryOption {
 
 
 @Composable
-fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
-                 localViewModel: LocalViewModel = viewModel(),
-                 checkoutViewModel: CheckoutViewModel = viewModel()
+fun CheckoutPage(
+    modifier: Modifier = Modifier, navController: NavController,
+    localViewModel: LocalViewModel = viewModel(),
+    checkoutViewModel: CheckoutViewModel = viewModel()
 ) {
     val primaryColor = Color(0xFFA90A24)
 
@@ -131,8 +137,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
 
     var acceptsTerms by remember { mutableStateOf(false) }
 
-
-    Column (modifier = Modifier.fillMaxWidth())  {
+    Column(modifier = Modifier.fillMaxWidth()) {
 
 
         Row(
@@ -151,7 +156,8 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .clickable {
                     GlobalNavigation.navController.popBackStack()
                 }
@@ -169,7 +175,7 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
             )
         }
 
-        Column (modifier = Modifier.padding(horizontal = 16.dp)){
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             // Sombrero/logo
             Image(
                 painter = painterResource(id = R.drawable.vector),
@@ -188,7 +194,11 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
 
             // MOSTRAR DATOS DEL USUARIO
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -383,9 +393,14 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                         val isPagoEnLineaSelected = selectedMetodoPago?.nombre == "Pago en Línea"
                         if (isPagoEnLineaSelected) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            Column(modifier = Modifier.padding(horizontal = 16.dp)
-                                .background(Color.LightGray.copy(alpha = 0.3f),
-                                    shape = RoundedCornerShape(8.dp))) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .background(
+                                        Color.LightGray.copy(alpha = 0.3f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                            ) {
 
                                 CardFields(
                                     cardName = cardName,
@@ -437,8 +452,9 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                         )
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Estoy de acuerdo con las Condiciones de uso y Política de Privacidad y entiendo que mi información " +
-                            "se usará como describe en este aplicativo y en Pizza Hut",
+                    Text(
+                        text = "Estoy de acuerdo con las Condiciones de uso y Política de Privacidad y entiendo que mi información " +
+                                "se usará como describe en este aplicativo y en Pizza Hut",
                         style = TextStyle(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 12.sp,
@@ -535,9 +551,15 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         FacturaFields(
                             ruc = facturaRuc,
-                            onRucChange = { facturaRuc = it },
+                            onRucChange = { newValue ->
+                                if (newValue.length <= 11 && newValue.all { it.isDigit() }) {
+                                    facturaRuc = newValue
+                                }
+                            },
                             razonSocial = facturaRazonSocial,
-                            onRazonSocialChange = { facturaRazonSocial = it }
+                            onRazonSocialChange = { newValue ->
+                                facturaRazonSocial = newValue
+                            }
                         )
                     }
                 }
@@ -585,8 +607,37 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
 
                         val isPagoEnLineaSelected = selectedMetodoPago?.nombre == "Pago en Línea"
                         if (isPagoEnLineaSelected) {
-                            if (cardName.isEmpty() || cardNumber.isEmpty() || cardExpiry.isEmpty() || cardCvv.isEmpty()) {
+                            if (cardName.isEmpty() || cardExpiry.isEmpty() || cardCvv.isEmpty()) {
                                 showToast(context, "Por favor, complete todos los campos de su tarjeta.")
+                                return@Button
+                            }
+                            if (cardNumber.length != 16) {
+                                showToast(context, "El número de tarjeta debe tener 16 dígitos.")
+                                return@Button
+                            }
+                            if (cardCvv.length != 3) {
+                                showToast(context, "El CVV debe tener 3 dígitos.")
+                                return@Button
+                            }
+                            val parts = cardExpiry.split("/")
+                            if (parts.size == 2) {
+                                val month = parts[0].toIntOrNull()
+                                val year = ("20" + parts[1]).toIntOrNull()
+
+                                if (month != null && year != null) {
+                                    val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+                                    val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
+
+                                    if (year < currentYear || (year == currentYear && month < currentMonth)) {
+                                        showToast(context, "La fecha de vencimiento de la tarjeta ya ha pasado.")
+                                        return@Button
+                                    }
+                                } else {
+                                    showToast(context, "Formato de fecha de vencimiento incorrecto. Use MM/AA.")
+                                    return@Button
+                                }
+                            } else {
+                                showToast(context, "Formato de fecha de vencimiento incorrecto. Use MM/AA.")
                                 return@Button
                             }
                         }
@@ -594,7 +645,15 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                         // 🆕 4. Validar campos de factura si está seleccionado
                         if (isFacturaChecked) {
                             if (facturaRuc.isEmpty() || facturaRazonSocial.isEmpty()) {
-                                showToast(context, "Por favor, complete los campos de RUC y Razón Social.")
+                                showToast(
+                                    context,
+                                    "Por favor, complete los campos de RUC y Razón Social."
+                                )
+                                return@Button
+                            }
+                            // Añade esta validación para el RUC
+                            if (facturaRuc.length != 11) {
+                                showToast(context, "El RUC debe tener exactamente 11 dígitos.")
                                 return@Button
                             }
                         }
@@ -613,9 +672,13 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                                     showToast(context, "Por favor, seleccione un local de recojo.")
                                 }
                             }
+
                             DeliveryOption.DELIVERY -> {
                                 if (shouldShowAddressForm && nuevaDireccionCalle.isNotEmpty() && nuevaDireccionNombre.isNotEmpty()) {
-                                    val newAddress = DireccionModel(nombre = nuevaDireccionNombre, direccion = nuevaDireccionCalle)
+                                    val newAddress = DireccionModel(
+                                        nombre = nuevaDireccionNombre,
+                                        direccion = nuevaDireccionCalle
+                                    )
                                     AppUtil.saveOrderWithNewAddress(
                                         context,
                                         navController,
@@ -632,7 +695,10 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                                         selectedComprobante
                                     )
                                 } else {
-                                    showToast(context, "Por favor, seleccione una dirección o complete los campos.")
+                                    showToast(
+                                        context,
+                                        "Por favor, seleccione una dirección o complete los campos."
+                                    )
                                 }
                             }
                         }
@@ -643,12 +709,14 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
                     colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
 
                 ) {
-                    Text(text = "PAGAR",
+                    Text(
+                        text = "PAGAR",
                         modifier = Modifier.padding(5.dp),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = SharpSansFontFamily,
-                        letterSpacing = 2.sp)
+                        letterSpacing = 2.sp
+                    )
 
                 }
             }
@@ -658,8 +726,9 @@ fun CheckoutPage(modifier: Modifier = Modifier, navController: NavController,
 }
 
 @Composable
-fun RecojoEnTiendaUI(locales: List<LocalModel>, isLocalesLoading: Boolean, selectedLocal: LocalModel?,
-                     onLocalSelected: (LocalModel) -> Unit
+fun RecojoEnTiendaUI(
+    locales: List<LocalModel>, isLocalesLoading: Boolean, selectedLocal: LocalModel?,
+    onLocalSelected: (LocalModel) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -703,9 +772,11 @@ fun RecojoEnTiendaUI(locales: List<LocalModel>, isLocalesLoading: Boolean, selec
                             }
                         }
                     } else {
-                        Text(text = "Seleccione un local de recojo",
+                        Text(
+                            text = "Seleccione un local de recojo",
                             fontSize = 14.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold,
-                            fontFamily = SharpSansFontFamily)
+                            fontFamily = SharpSansFontFamily
+                        )
                     }
                     Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Expandir")
                 }
@@ -728,9 +799,17 @@ fun RecojoEnTiendaUI(locales: List<LocalModel>, isLocalesLoading: Boolean, selec
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
-                                        Text(local.nombre, fontWeight = FontWeight.Bold, fontFamily = SharpSansFontFamily)
-                                        Text(local.direccion, color = Color.Gray, fontFamily = SharpSansFontFamily,
-                                            fontWeight = FontWeight.Medium)
+                                        Text(
+                                            local.nombre,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = SharpSansFontFamily
+                                        )
+                                        Text(
+                                            local.direccion,
+                                            color = Color.Gray,
+                                            fontFamily = SharpSansFontFamily,
+                                            fontWeight = FontWeight.Medium
+                                        )
                                     }
                                 }
                             },
@@ -744,10 +823,11 @@ fun RecojoEnTiendaUI(locales: List<LocalModel>, isLocalesLoading: Boolean, selec
 }
 
 @Composable
-fun DeliveryUI(direcciones: List<DireccionModel>, selectedDireccion: DireccionModel?,
-               onDireccionSelected: (DireccionModel?) -> Unit, nuevaDireccionNombre: String,
-               onNuevaDireccionNombreChange: (String) -> Unit, nuevaDireccionCalle: String,
-               onNuevaDireccionCalleChange: (String) -> Unit
+fun DeliveryUI(
+    direcciones: List<DireccionModel>, selectedDireccion: DireccionModel?,
+    onDireccionSelected: (DireccionModel?) -> Unit, nuevaDireccionNombre: String,
+    onNuevaDireccionNombreChange: (String) -> Unit, nuevaDireccionCalle: String,
+    onNuevaDireccionCalleChange: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showAddressForm by remember { mutableStateOf(false) }
@@ -756,9 +836,13 @@ fun DeliveryUI(direcciones: List<DireccionModel>, selectedDireccion: DireccionMo
         when {
             // Caso 1: Tiene 2 direcciones
             direcciones.size == 2 -> {
-                Text(text = "Seleccione una dirección de entrega: ",
-                    fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
-                    modifier = Modifier.padding(bottom = 4.dp))
+                Text(
+                    text = "Seleccione una dirección de entrega: ",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = SharpSansFontFamily,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -775,22 +859,33 @@ fun DeliveryUI(direcciones: List<DireccionModel>, selectedDireccion: DireccionMo
                         if (selectedDireccion != null) {
                             Column {
                                 Text(
-                                    text = selectedDireccion.nombre, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                                    text = selectedDireccion.nombre,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
                                     fontFamily = SharpSansFontFamily
                                 )
                                 Text(
-                                    text = selectedDireccion.direccion, fontSize = 12.sp, color = Color.Gray,
-                                    fontWeight = FontWeight.Medium, fontFamily = SharpSansFontFamily
+                                    text = selectedDireccion.direccion,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = SharpSansFontFamily
                                 )
                             }
                         } else {
                             Text(
-                                text = "Seleccione una dirección", fontSize = 14.sp, color = Color.Gray,
-                                fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily
+                                text = "Seleccione una dirección",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = SharpSansFontFamily
                             )
                         }
 
-                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Expandir")
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "Expandir"
+                        )
                     }
                     DropdownMenu(
                         expanded = expanded,
@@ -802,13 +897,18 @@ fun DeliveryUI(direcciones: List<DireccionModel>, selectedDireccion: DireccionMo
                                 text = {
                                     Column {
                                         Text(
-                                            text = dir.nombre, fontWeight = FontWeight.Bold, fontFamily = SharpSansFontFamily
+                                            text = dir.nombre,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = SharpSansFontFamily
                                         )
                                         Text(
-                                            text = dir.direccion, color = Color.Gray, fontFamily = SharpSansFontFamily,
+                                            text = dir.direccion,
+                                            color = Color.Gray,
+                                            fontFamily = SharpSansFontFamily,
                                             fontWeight = FontWeight.Medium
                                         )
-                                    } },
+                                    }
+                                },
                                 onClick = { onDireccionSelected(dir); expanded = false }
                             )
                         }
@@ -818,9 +918,13 @@ fun DeliveryUI(direcciones: List<DireccionModel>, selectedDireccion: DireccionMo
 
             // Caso 2: Tiene 1 dirección
             direcciones.size == 1 -> {
-                Text( text = "Seleccione o agregue una dirección:",
-                    fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
-                    modifier = Modifier.padding(bottom = 4.dp))
+                Text(
+                    text = "Seleccione o agregue una dirección:",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = SharpSansFontFamily,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
                 if (!showAddressForm) {
                     Box(
                         modifier = Modifier
@@ -838,22 +942,33 @@ fun DeliveryUI(direcciones: List<DireccionModel>, selectedDireccion: DireccionMo
                             if (selectedDireccion != null) {
                                 Column {
                                     Text(
-                                        text = selectedDireccion.nombre, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                                        text = selectedDireccion.nombre,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
                                         fontFamily = SharpSansFontFamily
                                     )
                                     Text(
-                                        text = selectedDireccion.direccion, fontSize = 12.sp, color = Color.Gray,
-                                        fontWeight = FontWeight.Medium, fontFamily = SharpSansFontFamily
+                                        text = selectedDireccion.direccion,
+                                        fontSize = 12.sp,
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = SharpSansFontFamily
                                     )
                                 }
                             } else {
                                 Text(
-                                    text = "Seleccione una dirección", fontSize = 14.sp, color = Color.Gray,
-                                    fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily
+                                    text = "Seleccione una dirección",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = SharpSansFontFamily
                                 )
                             }
 
-                            Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Expandir")
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Expandir"
+                            )
                         }
                         DropdownMenu(
                             expanded = expanded,
@@ -865,19 +980,31 @@ fun DeliveryUI(direcciones: List<DireccionModel>, selectedDireccion: DireccionMo
                                     text = {
                                         Column {
                                             Text(
-                                                text = dir.nombre, fontWeight = FontWeight.Bold, fontFamily = SharpSansFontFamily
+                                                text = dir.nombre,
+                                                fontWeight = FontWeight.Bold,
+                                                fontFamily = SharpSansFontFamily
                                             )
-                                            Text(text = dir.direccion, color = Color.Gray, fontFamily = SharpSansFontFamily,
+                                            Text(
+                                                text = dir.direccion,
+                                                color = Color.Gray,
+                                                fontFamily = SharpSansFontFamily,
                                                 fontWeight = FontWeight.Medium
                                             )
-                                        } },
+                                        }
+                                    },
                                     onClick = { onDireccionSelected(dir); expanded = false }
                                 )
                             }
 
                             DropdownMenuItem(
-                                text = { Text("Agregar nueva dirección",
-                                    fontFamily = SharpSansFontFamily, fontWeight = FontWeight.SemiBold, color = Color.Blue) },
+                                text = {
+                                    Text(
+                                        "Agregar nueva dirección",
+                                        fontFamily = SharpSansFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color.Blue
+                                    )
+                                },
                                 onClick = {
                                     showAddressForm = true
                                     onDireccionSelected(null)
@@ -888,8 +1015,10 @@ fun DeliveryUI(direcciones: List<DireccionModel>, selectedDireccion: DireccionMo
                     }
                 } else {
                     AddressForm(
-                        nombre = nuevaDireccionNombre, onNombreChange = onNuevaDireccionNombreChange,
-                        calle = nuevaDireccionCalle, onCalleChange = onNuevaDireccionCalleChange,
+                        nombre = nuevaDireccionNombre,
+                        onNombreChange = onNuevaDireccionNombreChange,
+                        calle = nuevaDireccionCalle,
+                        onCalleChange = onNuevaDireccionCalleChange,
                         onCancel = { showAddressForm = false }
                     )
                 }
@@ -897,11 +1026,19 @@ fun DeliveryUI(direcciones: List<DireccionModel>, selectedDireccion: DireccionMo
 
             // Caso 3: No tiene direcciones
             direcciones.isEmpty() -> {
-                Text(text = "Agregue una dirección para su pedido:",
-                    fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
-                    modifier = Modifier.padding(bottom = 4.dp))
-                AddressForm (nombre = nuevaDireccionNombre, onNombreChange = onNuevaDireccionNombreChange,
-                    calle = nuevaDireccionCalle, onCalleChange = onNuevaDireccionCalleChange, onCancel = { }
+                Text(
+                    text = "Agregue una dirección para su pedido:",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = SharpSansFontFamily,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                AddressForm(
+                    nombre = nuevaDireccionNombre,
+                    onNombreChange = onNuevaDireccionNombreChange,
+                    calle = nuevaDireccionCalle,
+                    onCalleChange = onNuevaDireccionCalleChange,
+                    onCancel = { }
                 )
             }
         }
@@ -909,32 +1046,46 @@ fun DeliveryUI(direcciones: List<DireccionModel>, selectedDireccion: DireccionMo
 }
 
 @Composable
-fun AddressForm(nombre: String, onNombreChange: (String) -> Unit, calle: String,
-                onCalleChange: (String) -> Unit, onCancel: () -> Unit
+fun AddressForm(
+    nombre: String, onNombreChange: (String) -> Unit, calle: String,
+    onCalleChange: (String) -> Unit, onCancel: () -> Unit
 ) {
     Column {
         OutlinedTextField(
             value = nombre,
             onValueChange = onNombreChange,
-            label = { Text(
-                text = "Nombre de la dirección (ej: Casa, Trabajo)",
-                fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily, fontSize = 13.sp, color = Color.Gray) },
+            label = {
+                Text(
+                    text = "Nombre de la dirección (ej: Casa, Trabajo)",
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = SharpSansFontFamily,
+                    fontSize = 13.sp,
+                    color = Color.Gray
+                )
+            },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = calle,
             onValueChange = onCalleChange,
-            label = { Text(
-                text = "Dirección completa",
-                fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily, fontSize = 13.sp, color = Color.Gray) },
+            label = {
+                Text(
+                    text = "Dirección completa",
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = SharpSansFontFamily,
+                    fontSize = 13.sp,
+                    color = Color.Gray
+                )
+            },
             modifier = Modifier.fillMaxWidth()
         )
     }
 }
 
 @Composable
-fun DeliveryAndPickupOptions(selectedDeliveryOption: DeliveryOption, onOptionSelected: (DeliveryOption) -> Unit
+fun DeliveryAndPickupOptions(
+    selectedDeliveryOption: DeliveryOption, onOptionSelected: (DeliveryOption) -> Unit
 ) {
     val deliveryCardColor by animateColorAsState(
         if (selectedDeliveryOption == DeliveryOption.DELIVERY) Color(0xFFC7011A) else Color.LightGray
@@ -1030,19 +1181,29 @@ fun CardFields(
     cardExpiry: String,
     onCardExpiryChange: (String) -> Unit,
     cardCvv: String,
-    onCardCvvChange: (String) -> Unit
+    onCardCvvChange: (String) -> Unit,
 ) {
-
     val primaryColor = Color(0xFFA90A24)
-    Column(modifier = Modifier.padding(12.dp)
+    val cvvFocusRequester = remember {FocusRequester()}
+
+    Column(
+        modifier = Modifier.padding(12.dp)
     ) {
         OutlinedTextField(
             // 🆕 Se usa el nuevo nombre del parámetro
             value = cardName,
-            onValueChange = onCardNameChange,
-            label = { Text(text = "Titular de la Tarjeta",
-                fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
-                fontSize = 12.sp, color = Color.Gray) },
+            onValueChange = { newValue ->
+                if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                    onCardNameChange(newValue)
+                }
+            },
+            label = {
+                Text(
+                    text = "Titular de la Tarjeta",
+                    fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
+                    fontSize = 12.sp, color = Color.Gray
+                )
+            },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = primaryColor,
@@ -1058,10 +1219,18 @@ fun CardFields(
         OutlinedTextField(
             // 🆕 Se usa el nuevo nombre del parámetro
             value = cardNumber,
-            onValueChange = onCardNumberChange,
-            label = { Text(text = "Número de Tarjeta",
-                fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
-                fontSize = 12.sp, color = Color.Gray) },
+            onValueChange = { newValue ->
+                if (newValue.length <= 16 && newValue.all { it.isDigit() }) {
+                    onCardNumberChange(newValue)
+                }
+            },
+            label = {
+                Text(
+                    text = "Número de Tarjeta",
+                    fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
+                    fontSize = 12.sp, color = Color.Gray
+                )
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
@@ -1075,16 +1244,58 @@ fun CardFields(
             )
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Row(modifier = Modifier.fillMaxWidth(),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedTextField(
-                // 🆕 Se usa el nuevo nombre del parámetro
                 value = cardExpiry,
-                onValueChange = onCardExpiryChange,
-                label = { Text(text = "MMAA",
-                    fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
-                    fontSize = 12.sp, color = Color.Gray) },
+                onValueChange = {newValue ->
+                    val filteredValue = newValue.filter { it.isDigit() || it == '/' }
+                    if (filteredValue.length <= 5) {
+                        // Si el usuario borra, se mantiene el formato correcto
+                        if (filteredValue.length < cardExpiry.length) {
+                            onCardExpiryChange(filteredValue)
+                            return@OutlinedTextField
+                        }
+
+                        // Formatea automáticamente a MM/AA
+                        val formattedValue = when {
+                            filteredValue.length == 1 && filteredValue.toIntOrNull() in 2..9 -> "0$filteredValue/"
+                            filteredValue.length == 2 && filteredValue.toIntOrNull() in 1..12 -> "$filteredValue/"
+                            filteredValue.length == 2 && filteredValue.toIntOrNull() == 0 -> filteredValue // No permite 0
+                            filteredValue.length == 3 && filteredValue[2] != '/' -> "${filteredValue.substring(0, 2)}/${filteredValue.substring(2)}"
+                            else -> filteredValue
+                        }
+
+                        // Valida que el mes sea entre 1 y 12
+                        if (formattedValue.length == 5) {
+                            val month = formattedValue.substring(0, 2).toIntOrNull()
+                            val year = "20${formattedValue.substring(3, 5)}".toIntOrNull()
+                            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+                            val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
+
+                            if (year == null || month == null || month < 1 || month > 12) {
+                                onCardExpiryChange(formattedValue)
+                                return@OutlinedTextField
+                            }
+
+                            if (year < currentYear || (year == currentYear && month < currentMonth)) {
+                                return@OutlinedTextField
+                            }
+                        }
+                        onCardExpiryChange(formattedValue)
+                    }
+                },
+                label = {
+                    Text(
+                        text = "MMAA",
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = SharpSansFontFamily,
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -1100,10 +1311,18 @@ fun CardFields(
             OutlinedTextField(
                 // 🆕 El nombre del parámetro ya era correcto, pero se mantiene la consistencia
                 value = cardCvv,
-                onValueChange = onCardCvvChange,
-                label = { Text(text = "CVV",
-                    fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
-                    fontSize = 13.sp, color = Color.Gray) },
+                onValueChange = { newValue ->
+                    if (newValue.length <= 3 && newValue.all { it.isDigit() }) {
+                        onCardCvvChange(newValue)
+                    }
+                },
+                label = {
+                    Text(
+                        text = "CVV",
+                        fontWeight = FontWeight.SemiBold, fontFamily = SharpSansFontFamily,
+                        fontSize = 13.sp, color = Color.Gray
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -1136,7 +1355,11 @@ fun FacturaFields(
     ) {
         OutlinedTextField(
             value = ruc,
-            onValueChange = onRucChange, // 🆕 Se usa el callback
+            onValueChange = { newValue ->
+                if (newValue.length <= 11) {
+                    onRucChange(newValue)
+                }
+            }, // 🆕 Se usa el callback
             label = {
                 Text(
                     text = "RUC",
