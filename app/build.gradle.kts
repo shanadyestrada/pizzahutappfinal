@@ -54,13 +54,15 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.messaging)
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation(libs.androidx.foundation)
     implementation(libs.material3)
     implementation(libs.androidx.foundation.layout)
+    implementation(libs.foundation)
+    implementation(libs.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -70,5 +72,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation ("io.coil-kt:coil-compose:2.2.0")
     implementation("com.tbuonomo:dotsindicator:5.1.0")
-
+    implementation("com.google.firebase:firebase-messaging")
 }
