@@ -72,7 +72,7 @@ fun HomePage(
 
             // Título
             Text(
-                text = "APROVECHA LOS PRODUCTOS QUE TENEMOS PARA TI!",
+                text = "PRUEBA NUESTROS PRODUCTOS!",
                 fontFamily = BrixtonLeadFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 38.sp,
