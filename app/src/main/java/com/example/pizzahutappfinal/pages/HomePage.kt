@@ -75,7 +75,7 @@ fun HomePage(
                 text = "PRUEBA NUESTROS PRODUCTOS!",
                 fontFamily = BrixtonLeadFontFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 38.sp,
+                fontSize = 33.sp,
             )
             // Aquí se listan las cards de productos destacados
             LazyRow (
