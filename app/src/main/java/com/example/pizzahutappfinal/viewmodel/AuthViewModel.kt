@@ -40,6 +40,7 @@ class AuthViewModel : ViewModel() {
                         .set(userModel)
                         .addOnCompleteListener { dbTask->
                             if (dbTask.isSuccessful) {
+                                auth.signOut()
                                 onResult(true, null)
                             } else {
                                 onResult(false,"Algo salió mal..")

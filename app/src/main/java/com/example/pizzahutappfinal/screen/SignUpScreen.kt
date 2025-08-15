@@ -25,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
@@ -65,20 +66,30 @@ import java.util.Calendar
 @Composable
 fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel = viewModel()) {
 
-
     val primaryColor = Color(0xFFA90A24)
 
     var nombre by remember { mutableStateOf("") }
     var apellidos by remember { mutableStateOf("") }
+
     var fechaNacimiento by remember { mutableStateOf("") }
+
     var telefono by remember { mutableStateOf("") }
+    var isTelefonoValid by remember { mutableStateOf(true) }
+    var telefonoErrorText by remember { mutableStateOf("") }
+
     var email by remember { mutableStateOf("") }
+    var isEmailValid by remember {mutableStateOf(true)}
+    var emailErrorText by remember {mutableStateOf("")}
+
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+
     var isLoading by remember {
         mutableStateOf(false)
     }
-    var passwordVisible by remember { mutableStateOf(false) }
+
     var acceptsTerms by remember { mutableStateOf(false) }
+
     var context = LocalContext.current
     var year: Int
     var month: Int
@@ -103,6 +114,11 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
         )
     }.apply{
         datePicker.maxDate = System.currentTimeMillis()
+    }
+
+    fun validateEmail(email: String): Boolean {
+        val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$".toRegex()
+        return email.matches(emailRegex)
     }
 
     val scrollState = rememberScrollState()
@@ -159,7 +175,14 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                 },
                 shape = RoundedCornerShape(7.dp),
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = primaryColor,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = primaryColor,
+                    unfocusedLabelColor = Color.Gray
+                ),
+                singleLine = true
             )
 
             // Apellidos
@@ -179,7 +202,14 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                     )
                 ) },
                 shape = RoundedCornerShape(7.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = primaryColor,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = primaryColor,
+                    unfocusedLabelColor = Color.Gray
+                ),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -188,7 +218,7 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(63.dp)
+                    .height(61.dp)
                     .clickable { datePickerDialog.show() }
                     .border(
                         width = 1.dp,
@@ -220,7 +250,8 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledBorderColor = Color.Transparent,
                         disabledTextColor = Color.Black
-                    )
+                    ),
+                    singleLine = true
                 )
             }
 
@@ -231,6 +262,8 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                     val filteredValue = newValue.filter { it.isDigit() }
                     if (filteredValue.length <= 9) {
                         telefono = filteredValue
+                        isTelefonoValid = filteredValue.length == 9 || filteredValue.isBlank()
+                        telefonoErrorText = if (isTelefonoValid || filteredValue.isBlank()) "" else "El teléfono debe tener 9 dígitos"
                     }
                 },
                 label = { Text("Teléfono *",
@@ -243,16 +276,36 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                 ) },
                 shape = RoundedCornerShape(7.dp),
                 modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = primaryColor,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = primaryColor,
+                    unfocusedLabelColor = Color.Gray
+                ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Done
-                )
+                ),
+                singleLine = true,
+                isError = telefono.isNotEmpty() && !isTelefonoValid
             )
+            if (!isTelefonoValid && telefono.isNotEmpty()){
+                Text(
+                    text = telefonoErrorText,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                )
+            }
 
             // Correo Electrónico
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = { newValue ->
+                    email = newValue
+                    isEmailValid = validateEmail(newValue)
+                    emailErrorText = if (isEmailValid || newValue.isBlank()) "" else "Formato de correo invalido"
+                },
                 label = { Text("Correo Electrónico *",
                     style = TextStyle(
                         color = Color.Gray,
@@ -262,8 +315,25 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                     )
                 ) },
                 shape = RoundedCornerShape(7.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = primaryColor,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = primaryColor,
+                    unfocusedLabelColor = Color.Gray
+                ),
+                singleLine = true,
+                isError = !isEmailValid
             )
+            if (!isEmailValid && email.isNotEmpty()) {
+                Text(
+                    text = emailErrorText,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                )
+
+            }
 
             // Contraseña
             OutlinedTextField(
@@ -280,6 +350,13 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                 )
             },
                 modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = primaryColor,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = primaryColor,
+                    unfocusedLabelColor = Color.Gray
+                ),
+                singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     val imagePainter = if(passwordVisible)
@@ -331,12 +408,16 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
             }
 
             Button (
+                colors  = ButtonDefaults.buttonColors(
+                    containerColor = primaryColor,
+                    contentColor = Color.White,
+                    disabledContainerColor = Color.LightGray),
+                shape = RoundedCornerShape(5.dp),
                 onClick = {
                     // Validar que no haya campos vacíos
                     if (nombre.isBlank() || apellidos.isBlank() || fechaNacimiento.isBlank() ||
                         telefono.isBlank() || email.isBlank() || password.isBlank()) {
                         Toast.makeText(context, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show()
-                        return@Button
                     }
 
                     isLoading = true
@@ -346,9 +427,10 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                         password = password,
                         fechaNacimiento = fechaNacimiento,
                         telefono = telefono) {sucess,errorMesagge ->
+                        isLoading = false
                         if (sucess) {
                             isLoading = false
-                            navController.navigate("home") {
+                            navController.navigate("login") {
                                 popUpTo("auth") {
                                     inclusive = true
                                 }
@@ -360,11 +442,19 @@ fun SignUpScreen(modifier: Modifier = Modifier, navController: NavController, au
                     }
                 },
                 enabled = !isLoading && acceptsTerms && nombre.isNotBlank() && apellidos.isNotBlank() &&
-                        fechaNacimiento.isNotBlank() && telefono.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
+                        fechaNacimiento.isNotBlank() && telefono.isNotBlank() && email.isNotBlank() && password.isNotBlank() &&
+                        isEmailValid && isTelefonoValid,
                 modifier = Modifier.fillMaxWidth()
-                    .height(60.dp)
+                    .height(60.dp).padding(top = 8.dp)
             ) {
-                Text(text = if (isLoading) "Creando la cuenta.." else "Registrarse", fontSize = 22.sp)
+                Text(text = if (isLoading) "CREANDO CUENTA..."
+                            else "REGISTRARSE",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = SharpSansFontFamily,
+                    letterSpacing = 2.sp,
+                    color = if(isLoading) Color.Gray else Color.White
+                )
             }
         }
     }

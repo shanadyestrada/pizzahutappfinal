@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton // Importar TextButton
 import androidx.compose.runtime.Composable
@@ -49,6 +50,8 @@ import com.example.pizzahutappfinal.ui.theme.BrixtonLeadFontFamily
 
 @Composable
 fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel = viewModel()) {
+
+    val primaryColor = Color(0xFFA90A24)
 
     var email by remember {
         mutableStateOf("")
@@ -102,7 +105,13 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             value = email,
             onValueChange = { email = it },
             label = { Text(text = "Correo electrónico *") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = primaryColor,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = primaryColor,
+                unfocusedLabelColor = Color.Gray
+            )
         )
 
         Spacer(modifier = Modifier.height(10.dp)) // Espacio entre campos
@@ -113,6 +122,12 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             onValueChange = { password = it },
             label = { Text(text = "Contraseña") },
             modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = primaryColor,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = primaryColor,
+                unfocusedLabelColor = Color.Gray
+            ),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 val imagePainter = if (passwordVisible)
@@ -129,21 +144,6 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
 
 
         )
-
-        // Enlace "¿Olvidaste tu contraseña?"
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start // Alinea el texto a la derecha
-        ) {
-            TextButton(onClick = { /* TODO: Navegar a la pantalla de recuperación de contraseña */ }) {
-                Text(
-                    text = "¿Olvidaste tu contraseña?",
-                    color = MaterialTheme.colorScheme.primary, // Color del tema para enlaces
-                    textDecoration = TextDecoration.Underline, // Subrayado
-                    fontSize = 14.sp
-                )
-            }
-        }
 
         Spacer(modifier = Modifier.height(14.dp)) // Espacio antes del botón Ingresar
 
@@ -195,7 +195,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             }) {
                 Text(
                     text = "Crea tu cuenta aquí",
-                    color = MaterialTheme.colorScheme.primary,
+                    color = primaryColor,
                     textDecoration = TextDecoration.Underline,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
